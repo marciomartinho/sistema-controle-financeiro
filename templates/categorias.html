@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <h2>Adicionar Categoria</h2>
+        <hr>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form action="{{ url_for('categorias_bp.gerenciar_categorias') }}" method="POST">
+                    <input type="hidden" name="form_type" value="categoria">
+                    <div class="mb-3">
+                        <label for="nome_cat" class="form-label">Nome da Categoria</label>
+                        <input type="text" class="form-control" id="nome_cat" name="nome" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="cor" class="form-label">Cor</label>
+                        <input type="color" class="form-control form-control-color" id="cor" name="cor" value="#808080" title="Escolha uma cor">
+                    </div>
+                    <div class="mb-3">
+                        <label for="icone" class="form-label">Ícone</label>
+                        <input type="text" class="form-control" id="icone" name="icone" value="bi-tag-fill" placeholder="Ex: bi-house-door-fill">
+                        <small class="form-text text-muted">Use classes do <a href="https://icons.getbootstrap.com/" target="_blank">Bootstrap Icons</a>.</small>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Salvar Categoria</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <h2>Minhas Categorias</h2>
+        <hr>
+        <table class="table table-hover align-middle">
+            <tbody>
+                {% for categoria in categorias %}
+                <tr class="table-light">
+                    <td style="width: 5%;">
+                        <i class="{{ categoria.icone }} fs-4" style="color: {{ categoria.cor }};"></i>
+                    </td>
+                    <td class="fw-bold fs-5">
+                        {{ categoria.nome }}
+                    </td>
+                    <td class="text-end">
+                        <a href="{{ url_for('categorias_bp.editar_categoria', id=categoria.id) }}" class="btn btn-sm btn-outline-primary" title="Editar Categoria {{ categoria.nome }}">
+                            <i class="bi bi-pencil-fill"></i>
+                        </a>
+                        <form action="{{ url_for('categorias_bp.deletar_categoria', id=categoria.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja deletar a categoria \'{{ categoria.nome }}\' e TODAS as suas subcategorias?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Deletar Categoria {{ categoria.nome }}">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+
+                {% for sub in categoria.subcategorias|sort(attribute='nome') %}
+                <tr>
+                    <td></td> <td>{{ sub.nome }}</td>
+                    <td class="text-end">
+                        <a href="{{ url_for('categorias_bp.editar_subcategoria', id=sub.id) }}" class="btn btn-sm btn-outline-primary" title="Editar Subcategoria">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form action="{{ url_for('categorias_bp.deletar_subcategoria', id=sub.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja deletar a subcategoria \'{{ sub.nome }}\'?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Deletar Subcategoria">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+
+                <tr>
+                    <td></td>
+                    <td colspan="2">
+                        <form action="{{ url_for('categorias_bp.gerenciar_categorias') }}" method="POST" class="d-flex">
+                            <input type="hidden" name="form_type" value="subcategoria">
+                            <input type="hidden" name="categoria_id" value="{{ categoria.id }}">
+                            <input type="text" name="nome" class="form-control form-control-sm me-2" placeholder="Adicionar nova subcategoria para {{ categoria.nome }}" required>
+                            <button type="submit" class="btn btn-sm btn-success">
+                                <i class="bi bi-plus-lg"></i> Adicionar
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="3">Nenhuma categoria cadastrada ainda.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

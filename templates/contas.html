@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Gestão de Contas</h2>
+    <hr>
+    <div class="card bg-light mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Adicionar Nova Conta</h5>
+            <form method="POST" action="{{ url_for('contas_bp.gerenciar_contas') }}" enctype="multipart/form-data">
+                <div class="row">
+                    <div class="col-md-6 mb-3"><label for="nome" class="form-label">Nome da Conta</label><input type="text" class="form-control" id="nome" name="nome" required></div>
+                    <div class="col-md-6 mb-3"><label for="saldo_inicial" class="form-label">Saldo Inicial (R$)</label><input type="number" step="0.01" class="form-control" id="saldo_inicial" name="saldo_inicial" value="0.00" required></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3"><label for="tipo_conta" class="form-label">Tipo de Conta</label><select class="form-select" id="tipo_conta" name="tipo_conta" onchange="toggleInvestimento()"><option value="Corrente">Conta Corrente</option><option value="Investimento">Investimento</option></select></div>
+                    <div class="col-md-4 mb-3" id="campo_tipo_investimento" style="display: none;"><label for="tipo_investimento" class="form-label">Tipo de Investimento</label><input type="text" class="form-control" id="tipo_investimento" name="tipo_investimento" placeholder="Ex: CDB, Ações..."></div>
+                    <div class="col-md-4 mb-3"><label for="logo_imagem" class="form-label">Logo do Banco (opcional)</label><input class="form-control" type="file" id="logo_imagem" name="logo_imagem"></div>
+                </div>
+                <button type="submit" class="btn btn-primary">Salvar Conta</button>
+            </form>
+        </div>
+    </div>
+    <h3>Minhas Contas</h3>
+    <table class="table table-striped table-hover align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th style="width: 10%;">Logo</th><th style="width: 35%;">Nome</th><th style="width: 20%;">Tipo</th><th style="width: 20%;">Saldo Inicial</th><th style="width: 15%; text-align: center;">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for conta in contas_corrente %}
+            <tr>
+                <td>{% if conta.logo_imagem %}<img src="{{ url_for('static', filename='uploads/' + conta.logo_imagem) }}" alt="Logo {{ conta.nome }}" class="img-fluid" style="max-width: 50px; border-radius: 5px;">{% endif %}</td>
+                <td>{{ conta.nome }}</td>
+                <td>{{ conta.tipo_conta }}</td>
+                <td>{{ conta.saldo_inicial | currency }}</td>
+                <td style="text-align: center;"><a href="{{ url_for('contas_bp.editar_conta', id=conta.id) }}" class="btn btn-sm btn-warning">Editar</a></td>
+            </tr>
+            {% endfor %}
+            {% for conta in contas_investimento %}
+            <tr>
+                <td>{% if conta.logo_imagem %}<img src="{{ url_for('static', filename='uploads/' + conta.logo_imagem) }}" alt="Logo {{ conta.nome }}" class="img-fluid" style="max-width: 50px; border-radius: 5px;">{% endif %}</td>
+                <td>
+                    {{ conta.nome }}
+                    {% if conta.tipo_investimento %}<small class="text-muted d-block">{{ conta.tipo_investimento }}</small>{% endif %}
+                </td>
+                <td>{{ conta.tipo_conta }}</td>
+                <td>{{ conta.saldo_inicial | currency }}</td>
+                <td style="text-align: center;"><a href="{{ url_for('contas_bp.editar_conta', id=conta.id) }}" class="btn btn-sm btn-warning">Editar</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot class="table-group-divider">
+            <tr><td colspan="4" class="text-end"><strong>Total Contas Corrente:</strong></td><td><strong>{{ total_corrente | currency }}</strong></td></tr>
+            <tr><td colspan="4" class="text-end"><strong>Total Investimentos:</strong></td><td><strong>{{ total_investimento | currency }}</strong></td></tr>
+            <tr class="table-dark"><td colspan="4" class="text-end"><strong>PATRIMÔNIO TOTAL:</strong></td><td><strong>{{ total_geral | currency }}</strong></td></tr>
+        </tfoot>
+    </table>
+    <script>
+        function toggleInvestimento() {
+            var tipoConta = document.getElementById('tipo_conta').value;
+            var campoInvestimento = document.getElementById('campo_tipo_investimento');
+            if (tipoConta === 'Investimento') {
+                campoInvestimento.style.display = 'block';
+            } else {
+                campoInvestimento.style.display = 'none';
+                document.getElementById('tipo_investimento').value = '';
+            }
+        }
+    </script>
+{% endblock %}

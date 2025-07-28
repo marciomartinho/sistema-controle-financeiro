@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Editar Subcategoria</h2>
+<hr>
+<div class="card bg-light">
+    <div class="card-body">
+        <p>Categoria-mãe: <i class="{{ subcategoria.categoria.icone }} me-1" style="color: {{ subcategoria.categoria.cor }};"></i><strong>{{ subcategoria.categoria.nome }}</strong></p>
+        <form action="{{ url_for('categorias_bp.editar_subcategoria', id=subcategoria.id) }}" method="POST">
+            <div class="mb-3"><label for="nome" class="form-label">Nome da Subcategoria</label><input type="text" class="form-control" id="nome" name="nome" value="{{ subcategoria.nome }}" required></div>
+            <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+            <a href="{{ url_for('categorias_bp.gerenciar_categorias') }}" class="btn btn-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
