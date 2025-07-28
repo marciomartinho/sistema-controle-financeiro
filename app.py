@@ -5,15 +5,13 @@ import locale
 from flask import Flask, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from dotenv import load_dotenv # NOVO IMPORT
+from dotenv import load_dotenv
 
-# Carrega as variáveis do arquivo .env para o ambiente
-load_dotenv() # NOVA LINHA
+load_dotenv()
 
 # --- CONFIGURAÇÃO E INICIALIZAÇÃO ---
 app = Flask(__name__)
 
-# Lê as configurações a partir das variáveis de ambiente (carregadas do .env)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -25,14 +23,16 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-from models import Categoria, Subcategoria, Conta, Lancamento
+from models import Categoria, Subcategoria, Conta, Lancamento, Recorrencia
 
 # --- REGISTRO DOS BLUEPRINTS ---
 from app_routes.contas_routes import contas_bp
 from app_routes.categorias_routes import categorias_bp
+from app_routes.lancamentos_routes import lancamentos_bp # NOVO IMPORT
 
 app.register_blueprint(contas_bp)
 app.register_blueprint(categorias_bp)
+app.register_blueprint(lancamentos_bp) # NOVO REGISTRO
 
 # --- FILTRO PERSONALIZADO E ROTA PRINCIPAL ---
 @app.template_filter('currency')
