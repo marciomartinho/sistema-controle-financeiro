@@ -20,18 +20,20 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 # Importa os modelos aqui
-from models import Categoria, Subcategoria, Conta, Lancamento, Recorrencia
+from models import Categoria, Subcategoria, Conta, Lancamento, Recorrencia, CartaoCredito
 
 # --- REGISTRO DOS BLUEPRINTS ---
 from app_routes.contas_routes import contas_bp
 from app_routes.categorias_routes import categorias_bp
 from app_routes.lancamentos_routes import lancamentos_bp
-from app_routes.dashboard_routes import dashboard_bp # NOVO IMPORT
+from app_routes.dashboard_routes import dashboard_bp
+from app_routes.cartoes_routes import cartoes_bp  # NOVO IMPORT
 
 app.register_blueprint(contas_bp)
 app.register_blueprint(categorias_bp)
 app.register_blueprint(lancamentos_bp)
-app.register_blueprint(dashboard_bp) # NOVO REGISTRO
+app.register_blueprint(dashboard_bp)
+app.register_blueprint(cartoes_bp)  # NOVO REGISTRO
 
 # --- FILTRO PERSONALIZADO E ROTA PRINCIPAL ---
 @app.template_filter('currency')

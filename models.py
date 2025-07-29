@@ -52,6 +52,21 @@ class Conta(db.Model):
     def __repr__(self):
         return f'<Conta {self.nome}>'
 
+class CartaoCredito(db.Model):
+    __tablename__ = 'cartoes_credito'
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(50), unique=True, nullable=False)
+    dia_vencimento = db.Column(db.Integer, nullable=False)  # Dia do mês (1-31)
+    conta_pagamento_id = db.Column(db.Integer, db.ForeignKey('contas.id'), nullable=True)  # Conta para debitar o pagamento
+    logo_imagem = db.Column(db.String(100), nullable=True)
+    ativo = db.Column(db.Boolean, nullable=False, default=True)
+    data_criacao = db.Column(db.Date, nullable=False, server_default=func.now())
+    
+    conta_pagamento = db.relationship('Conta', backref=db.backref('cartoes_credito', lazy=True))
+
+    def __repr__(self):
+        return f'<CartaoCredito {self.nome}>'
+
 class Recorrencia(db.Model):
     __tablename__ = 'recorrencias'
     id = db.Column(db.Integer, primary_key=True)
@@ -82,10 +97,12 @@ class Lancamento(db.Model):
     conta_id = db.Column(db.Integer, db.ForeignKey('contas.id'), nullable=False)
     subcategoria_id = db.Column(db.Integer, db.ForeignKey('subcategorias.id'), nullable=True) 
     transferencia_grupo_id = db.Column(db.Integer, db.ForeignKey('transferencia_grupos.id'), nullable=True)
+    cartao_credito_id = db.Column(db.Integer, db.ForeignKey('cartoes_credito.id'), nullable=True)
     
     conta = db.relationship('Conta', backref=db.backref('lancamentos', lazy=True))
     subcategoria = db.relationship('Subcategoria', backref=db.backref('lancamentos', lazy=True))
     transferencia_grupo = db.relationship('TransferenciaGrupo', backref=db.backref('lancamentos', lazy=True, cascade="all, delete-orphan"))
+    cartao_credito = db.relationship('CartaoCredito', backref=db.backref('lancamentos', lazy=True))
 
     def __repr__(self):
         return f'<Lançamento {self.descricao} - R${self.valor}>'

@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Gestão de Cartões de Crédito</h2>
+    <hr>
+    
+    <div class="card bg-light mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Adicionar Novo Cartão de Crédito</h5>
+            <form method="POST" action="{{ url_for('cartoes_bp.gerenciar_cartoes') }}" enctype="multipart/form-data">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label for="nome" class="form-label">Nome do Cartão</label>
+                        <input type="text" class="form-control" id="nome" name="nome" required placeholder="Ex: Cartão Nubank">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="dia_vencimento" class="form-label">Dia de Vencimento</label>
+                        <input type="number" class="form-control" id="dia_vencimento" name="dia_vencimento" min="1" max="31" required placeholder="Ex: 15">
+                        <small class="form-text text-muted">Dia do mês em que a fatura vence</small>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="conta_pagamento_id" class="form-label">Conta para Pagamento</label>
+                        <select class="form-select" id="conta_pagamento_id" name="conta_pagamento_id">
+                            <option value="">Selecionar depois...</option>
+                            {% for conta in contas %}
+                                <option value="{{ conta.id }}">{{ conta.nome }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-text text-muted">Conta que será debitada no pagamento</small>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="logo_imagem" class="form-label">Logo do Cartão (opcional)</label>
+                        <input class="form-control" type="file" id="logo_imagem" name="logo_imagem" accept="image/*">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-credit-card-fill"></i> Salvar Cartão
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <h3>Meus Cartões de Crédito</h3>
+    
+    {% if cartoes %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 10%;">Logo</th>
+                        <th style="width: 25%;">Nome</th>
+                        <th style="width: 15%;">Vencimento</th>
+                        <th style="width: 25%;">Conta Pagamento</th>
+                        <th style="width: 10%;">Status</th>
+                        <th style="width: 15%; text-align: center;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cartao in cartoes %}
+                    <tr>
+                        <td>
+                            {% if cartao.logo_imagem %}
+                                <img src="{{ url_for('static', filename='uploads/' + cartao.logo_imagem) }}" 
+                                     alt="Logo {{ cartao.nome }}" 
+                                     class="img-fluid" 
+                                     style="max-width: 50px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            {% else %}
+                                <i class="bi bi-credit-card-fill fs-2 text-muted"></i>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ cartao.nome }}</strong>
+                            <br>
+                            <small class="text-muted">Criado em {{ cartao.data_criacao.strftime('%d/%m/%Y') }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">Dia {{ cartao.dia_vencimento }}</span>
+                        </td>
+                        <td>
+                            {% if cartao.conta_pagamento %}
+                                {% if cartao.conta_pagamento.logo_imagem %}
+                                    <img src="{{ url_for('static', filename='uploads/' + cartao.conta_pagamento.logo_imagem) }}" 
+                                         alt="Logo" style="width: 20px; height: auto; margin-right: 5px; border-radius: 3px;">
+                                {% endif %}
+                                {{ cartao.conta_pagamento.nome }}
+                            {% else %}
+                                <span class="text-muted">
+                                    <i class="bi bi-exclamation-triangle-fill text-warning"></i> Não definida
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if cartao.ativo %}
+                                <span class="badge bg-success">Ativo</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inativo</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">
+                            <a href="{{ url_for('cartoes_bp.editar_cartao', id=cartao.id) }}" 
+                               class="btn btn-sm btn-warning me-1" 
+                               title="Editar {{ cartao.nome }}">
+                                <i class="bi bi-pencil-fill"></i>
+                            </a>
+                            {% if cartao.ativo %}
+                                <form action="{{ url_for('cartoes_bp.inativar_cartao', id=cartao.id) }}" 
+                                      method="POST" 
+                                      class="d-inline" 
+                                      onsubmit="return confirm('Tem certeza que deseja inativar o cartão \'{{ cartao.nome }}\'? Esta ação não pode ser desfeita.');">
+                                    <button type="submit" 
+                                            class="btn btn-sm btn-outline-danger" 
+                                            title="Inativar {{ cartao.nome }}">
+                                        <i class="bi bi-x-circle-fill"></i>
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center">
+            <i class="bi bi-credit-card fs-1 text-muted d-block mb-3"></i>
+            <h5>Nenhum cartão de crédito cadastrado</h5>
+            <p class="mb-0">Cadastre seu primeiro cartão usando o formulário acima.</p>
+        </div>
+    {% endif %}
+
+    <div class="mt-4">
+        <div class="alert alert-light">
+            <h6><i class="bi bi-info-circle-fill"></i> Informações importantes:</h6>
+            <ul class="mb-0">
+                <li>O dia de vencimento será usado para gerar automaticamente as faturas mensais no dashboard</li>
+                <li>Cartões inativos não aparecerão nas opções de lançamento</li>
+                <li>Você pode reativar um cartão editando-o (funcionalidade será implementada em breve)</li>
+            </ul>
+        </div>
+    </div>
+{% endblock %}
