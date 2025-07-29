@@ -1,28 +1,38 @@
-/* ===== DASHBOARD ESPECÍFICO ===== */
+/* ===== DASHBOARD CSS COMPLETO ===== */
 
-/* Container principal */
+/* Reset específico do dashboard */
 .dashboard-container {
     max-width: 1400px;
     margin: 0 auto;
     padding: 0 15px;
+    position: relative;
+    z-index: 1; /* Não interferir com menu */
 }
 
 /* ===== CARDS DE CONTAS ===== */
 .conta-card {
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 12px !important;
     overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.08) !important;
 }
 
 .conta-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12) !important;
+    border-color: rgba(102, 126, 234, 0.3) !important;
 }
 
 .saldo-card {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     color: white !important;
     border-radius: 12px !important;
+    border: none !important;
+}
+
+.saldo-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4) !important;
 }
 
 .icon-container {
@@ -35,53 +45,174 @@
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     font-size: 1.2rem;
+    flex-shrink: 0;
 }
 
-/* ===== TABELAS OTIMIZADAS ===== */
-.table-responsive {
-    border-radius: 8px;
+/* ===== SEÇÃO PRINCIPAL - RECEITAS E DESPESAS ===== */
+.receitas-despesas-section {
+    margin-bottom: 2rem;
+}
+
+.receitas-despesas-section .card {
+    border: none !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
     overflow: hidden;
 }
 
-.table th,
-.table td {
-    vertical-align: middle;
-    border-color: rgba(0,0,0,0.05);
+.receitas-despesas-section .card-header {
+    background: transparent !important;
+    border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+    padding: 1.25rem 1.5rem 1rem !important;
 }
 
-.table thead th {
-    background-color: #f8f9fa !important;
+.receitas-despesas-section .card-body {
+    padding: 0 !important;
+    max-height: 500px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* ===== TABELAS OTIMIZADAS ===== */
+.table {
+    margin-bottom: 0 !important;
+    font-size: 0.9rem;
+}
+
+.table th {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-bottom: 2px solid #dee2e6;
+    border: none !important;
+    padding: 12px 8px !important;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
-/* Scroll customizado para as tabelas */
+.table td {
+    border-color: rgba(0,0,0,0.05) !important;
+    padding: 8px !important;
+    vertical-align: middle;
+}
+
+.table tr:hover {
+    background-color: rgba(102, 126, 234, 0.04) !important;
+}
+
+/* Larguras específicas das colunas */
+.table th:nth-child(1), .table td:nth-child(1) { /* Data */
+    width: 70px;
+    min-width: 70px;
+    max-width: 70px;
+    text-align: center;
+    padding: 8px 4px !important;
+}
+
+.table th:nth-child(2), .table td:nth-child(2) { /* Descrição */
+    width: 200px;
+    min-width: 200px;
+    max-width: 200px;
+    padding: 8px 6px !important;
+}
+
+.table th:nth-child(3), .table td:nth-child(3) { /* Conta */
+    width: 90px;
+    min-width: 90px;
+    max-width: 90px;
+    padding: 8px 4px !important;
+}
+
+.table th:nth-child(4), .table td:nth-child(4) { /* Valor */
+    width: 100px;
+    min-width: 100px;
+    max-width: 100px;
+    text-align: right;
+    padding: 8px 6px !important;
+}
+
+.table th:nth-child(5), .table td:nth-child(5) { /* Ações */
+    width: 110px;
+    min-width: 110px;
+    max-width: 110px;
+    text-align: center;
+    padding: 8px 4px !important;
+}
+
+/* Scroll customizado */
 .card-body::-webkit-scrollbar {
     width: 6px;
 }
 
 .card-body::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: #f8f9fa;
     border-radius: 3px;
 }
 
 .card-body::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 3px;
 }
 
 .card-body::-webkit-scrollbar-thumb:hover {
-    background: #a1a1a1;
+    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
 }
 
-/* Sticky header para tabelas */
-.sticky-top {
-    position: sticky;
-    top: 0;
-    z-index: 10;
+/* Estados das linhas */
+.table-success.bg-opacity-25 {
+    background-color: rgba(25, 135, 84, 0.08) !important;
+    border-left: 3px solid #198754;
+}
+
+/* ===== BOTÕES DAS TABELAS ===== */
+.btn-group-sm .btn {
+    padding: 3px 6px !important;
+    font-size: 0.8rem !important;
+    border-radius: 4px !important;
+    margin: 0 1px;
+    line-height: 1.2;
+}
+
+.btn-outline-success:hover {
+    background-color: #198754 !important;
+    border-color: #198754 !important;
+    color: white !important;
+}
+
+.btn-outline-primary:hover {
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    color: white !important;
+}
+
+.btn-outline-danger:hover {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: white !important;
+}
+
+.btn-success {
+    background-color: #198754 !important;
+    border-color: #198754 !important;
+}
+
+/* ===== BADGES ===== */
+.badge {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.badge.bg-success {
+    background-color: #198754 !important;
+}
+
+.badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: #000 !important;
 }
 
 /* ===== RESUMO FINANCEIRO ===== */
@@ -89,11 +220,14 @@
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     border-radius: 15px !important;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3) !important;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.25) !important;
+    border: none !important;
+    margin-top: 1rem;
 }
 
 .resumo-financeiro .card-body {
     position: relative;
+    padding: 2rem !important;
 }
 
 .resumo-financeiro .card-body::before {
@@ -103,24 +237,62 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="1" fill="white" opacity="0.05"/><circle cx="20" cy="80" r="1" fill="white" opacity="0.05"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    background-image: 
+        radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 2px, transparent 2px),
+        radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 50px 50px;
     pointer-events: none;
+    opacity: 0.6;
+}
+
+.resumo-financeiro .card-title {
+    position: relative;
+    z-index: 2;
+    color: white !important;
+    font-weight: 600;
+    margin-bottom: 2rem !important;
 }
 
 .resumo-financeiro .row > div > div {
+    background: rgba(255, 255, 255, 0.15) !important;
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 12px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 2;
+    height: 100%;
 }
 
 .resumo-financeiro .row > div > div:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
+.resumo-financeiro h4,
+.resumo-financeiro h5,
+.resumo-financeiro h6,
+.resumo-financeiro .fw-semibold,
+.resumo-financeiro .fw-bold {
+    color: white !important;
+    position: relative;
+    z-index: 3;
+}
+
+.resumo-financeiro .opacity-75,
+.resumo-financeiro small {
+    opacity: 0.85 !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.resumo-financeiro i {
+    color: inherit !important;
 }
 
 /* ===== ANIMAÇÕES ===== */
-@keyframes fadeIn {
+@keyframes fadeInUp {
     from { 
         opacity: 0; 
         transform: translateY(20px); 
@@ -154,7 +326,7 @@
 }
 
 .fade-in {
-    animation: fadeIn 0.6s ease-out forwards;
+    animation: fadeInUp 0.6s ease-out forwards;
 }
 
 .slide-in-left {
@@ -166,12 +338,19 @@
 }
 
 /* ===== RESPONSIVIDADE ===== */
-@media (max-width: 768px) {
+@media (max-width: 1200px) {
     .dashboard-container {
+        max-width: 100%;
         padding: 0 10px;
     }
+}
+
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 0 8px;
+    }
     
-    .card-body {
+    .receitas-despesas-section .card-body {
         max-height: 400px !important;
     }
     
@@ -179,106 +358,58 @@
         padding: 1.5rem !important;
     }
     
+    .table {
+        font-size: 0.8rem !important;
+    }
+    
     .table th,
     .table td {
-        font-size: 0.8rem !important;
-        padding: 4px !important;
+        padding: 6px 4px !important;
     }
     
     .btn-group-sm .btn {
-        padding: 1px 4px !important;
+        padding: 2px 4px !important;
         font-size: 0.7rem !important;
     }
-}
-
-@media (max-width: 576px) {
-    .col-lg-6 {
-        margin-bottom: 1rem !important;
+    
+    /* Ajustar larguras das colunas em mobile */
+    .table th:nth-child(2), .table td:nth-child(2) { /* Descrição */
+        width: 150px;
+        min-width: 150px;
+        max-width: 150px;
     }
     
-    .card-body {
-        max-height: 350px !important;
-    }
-    
-    /* Esconder coluna conta em telas muito pequenas */
-    .d-none.d-lg-table-cell {
+    .table th:nth-child(3), .table td:nth-child(3) { /* Conta - esconder em mobile */
         display: none !important;
     }
 }
 
-/* ===== ESTADOS E BADGES ===== */
-.table-success.bg-opacity-25 {
-    background-color: rgba(25, 135, 84, 0.1) !important;
-    border-left: 3px solid #198754;
-}
-
-.badge {
-    font-size: 0.7rem;
-    padding: 4px 8px;
-}
-
-/* ===== BOTÕES PERSONALIZADOS ===== */
-.btn-group-sm .btn {
-    border-radius: 4px;
-    margin: 0 1px;
-}
-
-.btn-outline-success:hover {
-    background-color: #198754 !important;
-    border-color: #198754 !important;
-}
-
-.btn-outline-primary:hover {
-    background-color: #0d6efd !important;
-    border-color: #0d6efd !important;
-}
-
-.btn-outline-danger:hover {
-    background-color: #dc3545 !important;
-    border-color: #dc3545 !important;
-}
-
-/* ===== LOADING OVERLAY ===== */
-#loading-overlay {
-    backdrop-filter: blur(5px);
-    z-index: 9999 !important;
-}
-
-#loading-overlay .spinner-border {
-    width: 3rem;
-    height: 3rem;
-}
-
-/* ===== NOTIFICAÇÕES ===== */
-#notification-container {
-    top: 20px !important;
-    right: 20px !important;
-    z-index: 9999 !important;
-}
-
-#notification-container .alert {
-    min-width: 300px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-/* ===== MODAIS ===== */
-.modal-content {
-    border-radius: 12px !important;
-}
-
-.modal-header {
-    border-bottom: 1px solid rgba(0,0,0,0.1);
-    padding: 1.5rem;
-}
-
-.modal-body {
-    padding: 1.5rem;
-}
-
-.modal-footer {
-    border-top: 1px solid rgba(0,0,0,0.1);
-    padding: 1.5rem;
+@media (max-width: 576px) {
+    .receitas-despesas-section .card-body {
+        max-height: 300px !important;
+    }
+    
+    .resumo-financeiro .card-body {
+        padding: 1rem !important;
+    }
+    
+    .table th:nth-child(2), .table td:nth-child(2) { /* Descrição ainda menor */
+        width: 120px;
+        min-width: 120px;
+        max-width: 120px;
+    }
+    
+    .table th:nth-child(4), .table td:nth-child(4) { /* Valor */
+        width: 80px;
+        min-width: 80px;
+        max-width: 80px;
+    }
+    
+    .table th:nth-child(5), .table td:nth-child(5) { /* Ações */
+        width: 90px;
+        min-width: 90px;
+        max-width: 90px;
+    }
 }
 
 /* ===== UTILITÁRIOS ===== */
@@ -288,8 +419,8 @@
     white-space: nowrap;
 }
 
-.overflow-hidden {
-    overflow: hidden;
+.text-nowrap {
+    white-space: nowrap !important;
 }
 
 /* ===== CORES PERSONALIZADAS ===== */
@@ -304,8 +435,57 @@
 /* ===== FILTROS DE DATA ===== */
 .form-select:focus,
 .form-control:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    border-color: #667eea !important;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
+}
+
+/* ===== MODAIS ===== */
+.modal-content {
+    border-radius: 12px !important;
+    border: none !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2) !important;
+}
+
+.modal-header {
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid rgba(0,0,0,0.08);
+    padding: 1.5rem;
+    background: #f8f9fa;
+}
+
+/* ===== LOADING E NOTIFICAÇÕES ===== */
+#loading-overlay {
+    backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.9) !important;
+    z-index: 9999 !important;
+}
+
+#loading-overlay .spinner-border {
+    width: 3rem;
+    height: 3rem;
+    color: #667eea !important;
+}
+
+#notification-container {
+    top: 20px !important;
+    right: 20px !important;
+    z-index: 9998 !important; /* Menor que menu */
+}
+
+#notification-container .alert {
+    min-width: 300px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border: none !important;
 }
 
 /* ===== PRINT STYLES ===== */
@@ -322,5 +502,15 @@
     .card {
         border: 1px solid #dee2e6 !important;
         box-shadow: none !important;
+        break-inside: avoid;
+    }
+    
+    .resumo-financeiro {
+        background: #f8f9fa !important;
+        color: #000 !important;
+    }
+    
+    .resumo-financeiro * {
+        color: #000 !important;
     }
 }
