@@ -64,6 +64,16 @@ class CartaoCredito(db.Model):
     
     conta_pagamento = db.relationship('Conta', backref=db.backref('cartoes_credito', lazy=True))
 
+    def total_gastos_mes(self, ano, mes):
+        """Calcula o total de gastos do cartão em um mês específico"""
+        total = db.session.query(func.sum(Lancamento.valor)).filter(
+            Lancamento.cartao_credito_id == self.id,
+            Lancamento.tipo == 'Despesa',
+            func.extract('year', Lancamento.data_vencimento) == ano,
+            func.extract('month', Lancamento.data_vencimento) == mes
+        ).scalar() or 0.0
+        return total
+
     def __repr__(self):
         return f'<CartaoCredito {self.nome}>'
 
@@ -94,7 +104,7 @@ class Lancamento(db.Model):
     data_criacao = db.Column(db.Date, nullable=False, server_default=func.now())
     
     recorrencia_id = db.Column(db.Integer, db.ForeignKey('recorrencias.id'), nullable=True)
-    conta_id = db.Column(db.Integer, db.ForeignKey('contas.id'), nullable=False)
+    conta_id = db.Column(db.Integer, db.ForeignKey('contas.id'), nullable=True)  # MUDANÇA: agora pode ser NULL
     subcategoria_id = db.Column(db.Integer, db.ForeignKey('subcategorias.id'), nullable=True) 
     transferencia_grupo_id = db.Column(db.Integer, db.ForeignKey('transferencia_grupos.id'), nullable=True)
     cartao_credito_id = db.Column(db.Integer, db.ForeignKey('cartoes_credito.id'), nullable=True)
@@ -103,6 +113,33 @@ class Lancamento(db.Model):
     subcategoria = db.relationship('Subcategoria', backref=db.backref('lancamentos', lazy=True))
     transferencia_grupo = db.relationship('TransferenciaGrupo', backref=db.backref('lancamentos', lazy=True, cascade="all, delete-orphan"))
     cartao_credito = db.relationship('CartaoCredito', backref=db.backref('lancamentos', lazy=True))
+
+    def __init__(self, **kwargs):
+        """
+        Validação customizada: lançamento deve ter CONTA_ID OU CARTAO_CREDITO_ID, mas não ambos
+        """
+        super().__init__(**kwargs)
+        
+        # Validação: deve ter conta OU cartão, mas não ambos
+        if self.conta_id and self.cartao_credito_id:
+            raise ValueError("Lançamento não pode ter conta_id e cartao_credito_id ao mesmo tempo")
+        
+        # Para transferências, deve ter conta_id
+        if self.transferencia_grupo_id and not self.conta_id:
+            raise ValueError("Transferências devem ter conta_id")
+        
+        # Para lançamentos normais (não transferência), deve ter conta_id OU cartao_credito_id
+        if not self.transferencia_grupo_id and not self.conta_id and not self.cartao_credito_id:
+            raise ValueError("Lançamento deve ter conta_id ou cartao_credito_id")
+
+    @property
+    def origem_destino(self):
+        """Retorna a origem/destino do lançamento (conta ou cartão)"""
+        if self.conta_id:
+            return self.conta.nome
+        elif self.cartao_credito_id:
+            return self.cartao_credito.nome
+        return "N/A"
 
     def __repr__(self):
         return f'<Lançamento {self.descricao} - R${self.valor}>'

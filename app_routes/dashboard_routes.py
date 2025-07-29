@@ -17,13 +17,16 @@ def dashboard():
     ano_selecionado = request.args.get('ano', datetime.now().year, type=int)
     mes_selecionado = request.args.get('mes', datetime.now().month, type=int)
 
-    lancamentos_query = Lancamento.query.filter(
+    # Filtrar lançamentos de conta (não cartão) para o mês/ano selecionado
+    lancamentos_conta_query = Lancamento.query.filter(
         extract('year', Lancamento.data_vencimento) == ano_selecionado,
-        extract('month', Lancamento.data_vencimento) == mes_selecionado
+        extract('month', Lancamento.data_vencimento) == mes_selecionado,
+        Lancamento.conta_id.isnot(None),  # Apenas lançamentos com conta
+        Lancamento.cartao_credito_id.is_(None)  # Excluir lançamentos de cartão
     )
 
-    receitas = lancamentos_query.filter_by(tipo='Receita').order_by(Lancamento.data_vencimento).all()
-    despesas = lancamentos_query.filter_by(tipo='Despesa').order_by(Lancamento.data_vencimento).all()
+    receitas = lancamentos_conta_query.filter_by(tipo='Receita').order_by(Lancamento.data_vencimento).all()
+    despesas = lancamentos_conta_query.filter_by(tipo='Despesa').order_by(Lancamento.data_vencimento).all()
 
     # Buscar faturas de cartões para o mês/ano selecionado
     faturas_cartoes = []
@@ -48,19 +51,14 @@ def dashboard():
                 ultimo_dia = calendar.monthrange(ano_selecionado, mes_selecionado)[1]
                 data_vencimento = datetime(ano_selecionado, mes_selecionado, min(cartao.dia_vencimento, ultimo_dia)).date()
             
-            # Calcular valor da fatura (soma dos lançamentos do cartão no mês anterior ao vencimento)
-            if mes_selecionado == 1:
-                mes_anterior = 12
-                ano_anterior = ano_selecionado - 1
-            else:
-                mes_anterior = mes_selecionado - 1
-                ano_anterior = ano_selecionado
-            
+            # MUDANÇA PRINCIPAL: Calcular valor da fatura baseado nos lançamentos do cartão
+            # Busca todos os lançamentos do cartão no mês atual (não no anterior)
             valor_fatura = db.session.query(db.func.sum(Lancamento.valor)).filter(
-                extract('year', Lancamento.data_vencimento) == ano_anterior,
-                extract('month', Lancamento.data_vencimento) == mes_anterior,
+                extract('year', Lancamento.data_vencimento) == ano_selecionado,
+                extract('month', Lancamento.data_vencimento) == mes_selecionado,
                 Lancamento.cartao_credito_id == cartao.id,
-                Lancamento.tipo == 'Despesa'
+                Lancamento.tipo == 'Despesa',
+                ~Lancamento.descricao.like('Fatura %')  # Excluir faturas já criadas
             ).scalar() or 0.0
             
             # Criar objeto similar ao Lancamento para exibição
@@ -74,6 +72,19 @@ def dashboard():
                 'tipo': 'CartaoCredito'
             }
             faturas_cartoes.append(fatura)
+        else:
+            # Se a fatura já existe, incluí-la na lista
+            fatura_dict = {
+                'id': fatura_existente.id,
+                'descricao': fatura_existente.descricao,
+                'valor': fatura_existente.valor,
+                'data_vencimento': fatura_existente.data_vencimento,
+                'cartao': cartao,
+                'status': fatura_existente.status,
+                'tipo': 'CartaoCredito',
+                'lancamento_existente': True
+            }
+            faturas_cartoes.append(fatura_dict)
 
     # Ordenar faturas de cartões por data de vencimento
     faturas_cartoes.sort(key=lambda x: x['data_vencimento'])
@@ -153,19 +164,13 @@ def marcar_fatura_paga(cartao_id, ano, mes):
             ultimo_dia = calendar.monthrange(ano, mes)[1]
             data_vencimento = datetime(ano, mes, min(cartao.dia_vencimento, ultimo_dia)).date()
         
-        # Calcular valor da fatura
-        if mes == 1:
-            mes_anterior = 12
-            ano_anterior = ano - 1
-        else:
-            mes_anterior = mes - 1
-            ano_anterior = ano
-        
+        # MUDANÇA: Calcular valor da fatura baseado nos gastos do cartão no mês atual
         valor_fatura = db.session.query(db.func.sum(Lancamento.valor)).filter(
-            extract('year', Lancamento.data_vencimento) == ano_anterior,
-            extract('month', Lancamento.data_vencimento) == mes_anterior,
+            extract('year', Lancamento.data_vencimento) == ano,
+            extract('month', Lancamento.data_vencimento) == mes,
             Lancamento.cartao_credito_id == cartao_id,
-            Lancamento.tipo == 'Despesa'
+            Lancamento.tipo == 'Despesa',
+            ~Lancamento.descricao.like('Fatura %')  # Excluir faturas já criadas
         ).scalar() or 0.0
         
         nova_fatura = Lancamento(

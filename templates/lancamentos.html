@@ -19,6 +19,10 @@
                         <input class="form-check-input" type="radio" name="tipo_lancamento" id="tipo_transferencia" value="Transferencia">
                         <label class="form-check-label" for="tipo_transferencia">Transferência</label>
                     </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="tipo_lancamento" id="tipo_cartao" value="CartaoCredito">
+                        <label class="form-check-label" for="tipo_cartao">Cartão de Crédito</label>
+                    </div>
                 </div>
             </div>
             
@@ -80,6 +84,10 @@
                             <input class="form-check-input" type="radio" name="recorrencia_tipo" id="recorrencia_parcelada" value="parcelada">
                             <label class="form-check-label" for="recorrencia_parcelada">Parcelada</label>
                         </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="recorrencia_tipo" id="recorrencia_anual" value="anual">
+                            <label class="form-check-label" for="recorrencia_anual">Única Anual</label>
+                        </div>
                     </div>
                 </fieldset>
                 
@@ -91,6 +99,92 @@
                     <div class="col-md-3">
                         <label for="frequencia" class="form-label">Frequência</label>
                         <select class="form-select" name="frequencia" id="frequencia">
+                            <option value="Mensal" selected>Mensal</option>
+                            <option value="Semanal">Semanal</option>
+                            <option value="Quinzenal">Quinzenal</option>
+                            <option value="Anual">Anual</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="campos_cartao_credito" style="display: none;">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label for="categoria_cartao" class="form-label">Categoria</label>
+                        <select class="form-select" name="categoria_cartao" id="categoria_cartao" disabled>
+                            <option value="">Selecione...</option>
+                            {% for cat in categorias %}
+                                <option value="{{ cat.id }}">{{ cat.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="subcategoria_cartao_id" class="form-label">Subcategoria</label>
+                        <select class="form-select" name="subcategoria_cartao_id" id="subcategoria_cartao" disabled>
+                            <option value="">Selecione uma categoria primeiro</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="cartao_credito_id" class="form-label">Cartão de Crédito</label>
+                        <select class="form-select" name="cartao_credito_id" id="cartao_credito_id" disabled>
+                            <option value="">Selecione...</option>
+                            {% for cartao in cartoes %}
+                                <option value="{{ cartao.id }}">{{ cartao.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="fatura_inicio_mes" class="form-label">A partir da fatura de:</label>
+                        <select class="form-select" name="fatura_inicio_mes" id="fatura_inicio_mes" disabled>
+                            <option value="">Selecione...</option>
+                            <option value="1">Janeiro</option>
+                            <option value="2">Fevereiro</option>
+                            <option value="3">Março</option>
+                            <option value="4">Abril</option>
+                            <option value="5">Maio</option>
+                            <option value="6">Junho</option>
+                            <option value="7">Julho</option>
+                            <option value="8">Agosto</option>
+                            <option value="9">Setembro</option>
+                            <option value="10">Outubro</option>
+                            <option value="11">Novembro</option>
+                            <option value="12">Dezembro</option>
+                        </select>
+                        <small class="form-text text-muted">Primeira fatura que terá este gasto</small>
+                    </div>
+                </div>
+                
+                <fieldset class="row mb-3">
+                    <legend class="col-form-label col-sm-2 pt-0">Recorrência</legend>
+                    <div class="col-sm-10">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="recorrencia_tipo_cartao" id="recorrencia_nao_cartao" value="unica" checked>
+                            <label class="form-check-label" for="recorrencia_nao_cartao">Única Vez</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="recorrencia_tipo_cartao" id="recorrencia_fixa_cartao" value="fixa">
+                            <label class="form-check-label" for="recorrencia_fixa_cartao">Fixa Mensal</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="recorrencia_tipo_cartao" id="recorrencia_parcelada_cartao" value="parcelada">
+                            <label class="form-check-label" for="recorrencia_parcelada_cartao">Parcelada</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="recorrencia_tipo_cartao" id="recorrencia_anual_cartao" value="anual">
+                            <label class="form-check-label" for="recorrencia_anual_cartao">Única Anual</label>
+                        </div>
+                    </div>
+                </fieldset>
+                
+                <div class="row g-3" id="campos_parcelamento_cartao" style="display: none;">
+                    <div class="col-md-3">
+                        <label for="num_parcelas_cartao" class="form-label">Nº de Parcelas</label>
+                        <input type="number" class="form-control" name="num_parcelas_cartao" id="num_parcelas_cartao" min="2" value="2">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="frequencia_cartao" class="form-label">Frequência</label>
+                        <select class="form-select" name="frequencia_cartao" id="frequencia_cartao">
                             <option value="Mensal" selected>Mensal</option>
                             <option value="Semanal">Semanal</option>
                             <option value="Quinzenal">Quinzenal</option>
@@ -138,7 +232,7 @@
             <th style="width: 10%;">Lançado em</th>
             <th style="width: 25%;">Descrição</th>
             <th style="width: 20%;">Categoria</th>
-            <th style="width: 15%;">Conta</th>
+            <th style="width: 15%;">Conta/Cartão</th>
             <th style="width: 10%;">Valor Total</th>
             <th style="width: 10%;">Recorrência</th>
             <th style="width: 10%;" class="text-center">Ações</th>
@@ -187,17 +281,35 @@
             <tr>
                 <td>{{ recorrencia.data_criacao.strftime('%d/%m/%Y') if recorrencia.data_criacao }}</td>
                 <td>
-                    <i class="{{ primeiro_lancamento.subcategoria.categoria.icone }}" 
-                       style="color: {{ primeiro_lancamento.subcategoria.categoria.cor }};"></i> 
+                    {% if primeiro_lancamento.cartao_credito_id %}
+                        <i class="bi bi-credit-card-fill" style="color: #6f42c1;"></i>
+                    {% else %}
+                        <i class="{{ primeiro_lancamento.subcategoria.categoria.icone }}" 
+                           style="color: {{ primeiro_lancamento.subcategoria.categoria.cor }};"></i>
+                    {% endif %}
                     {{ recorrencia.descricao_base }}
                 </td>
-                <td>{{ primeiro_lancamento.subcategoria.categoria.nome }} / {{ primeiro_lancamento.subcategoria.nome }}</td>
                 <td>
-                    {% if primeiro_lancamento.conta.logo_imagem %}
-                        <img src="{{ url_for('static', filename='uploads/' + primeiro_lancamento.conta.logo_imagem) }}" 
-                             alt="Logo" style="width: 20px; height: auto; margin-right: 5px; border-radius: 3px;">
+                    {% if primeiro_lancamento.subcategoria %}
+                        {{ primeiro_lancamento.subcategoria.categoria.nome }} / {{ primeiro_lancamento.subcategoria.nome }}
+                    {% else %}
+                        Cartão de Crédito
                     {% endif %}
-                    {{ primeiro_lancamento.conta.nome }}
+                </td>
+                <td>
+                    {% if primeiro_lancamento.cartao_credito_id %}
+                        {% if primeiro_lancamento.cartao_credito.logo_imagem %}
+                            <img src="{{ url_for('static', filename='uploads/' + primeiro_lancamento.cartao_credito.logo_imagem) }}" 
+                                 alt="Logo" style="width: 20px; height: auto; margin-right: 5px; border-radius: 3px;">
+                        {% endif %}
+                        {{ primeiro_lancamento.cartao_credito.nome }}
+                    {% else %}
+                        {% if primeiro_lancamento.conta.logo_imagem %}
+                            <img src="{{ url_for('static', filename='uploads/' + primeiro_lancamento.conta.logo_imagem) }}" 
+                                 alt="Logo" style="width: 20px; height: auto; margin-right: 5px; border-radius: 3px;">
+                        {% endif %}
+                        {{ primeiro_lancamento.conta.nome }}
+                    {% endif %}
                 </td>
                 <td class="{% if primeiro_lancamento.tipo == 'Despesa' %}text-danger{% else %}text-success{% endif %}">
                     {{ (recorrencia.lancamentos|sum(attribute='valor')) | currency }}
@@ -207,6 +319,8 @@
                         <span class="badge text-bg-primary">{{ recorrencia.tipo }}</span>
                     {% elif recorrencia.tipo == 'Parcelada' %}
                         <span class="badge text-bg-warning">{{ recorrencia.tipo }} (em {{ recorrencia.total_parcelas }}x)</span>
+                    {% elif recorrencia.tipo == 'Anual' %}
+                        <span class="badge text-bg-info">{{ recorrencia.tipo }} ({{ recorrencia.total_parcelas }} anos)</span>
                     {% else %}
                         <span class="badge text-bg-info">{{ recorrencia.tipo }}</span>
                     {% endif %}
@@ -235,17 +349,35 @@
         <tr>
             <td>{{ lancamento.data_criacao.strftime('%d/%m/%Y') if lancamento.data_criacao }}</td>
             <td>
-                <i class="{{ lancamento.subcategoria.categoria.icone }}" 
-                   style="color: {{ lancamento.subcategoria.categoria.cor }};"></i> 
+                {% if lancamento.cartao_credito_id %}
+                    <i class="bi bi-credit-card-fill" style="color: #6f42c1;"></i>
+                {% else %}
+                    <i class="{{ lancamento.subcategoria.categoria.icone }}" 
+                       style="color: {{ lancamento.subcategoria.categoria.cor }};"></i>
+                {% endif %}
                 {{ lancamento.descricao }}
             </td>
-            <td>{{ lancamento.subcategoria.categoria.nome }} / {{ lancamento.subcategoria.nome }}</td>
             <td>
-                {% if lancamento.conta.logo_imagem %}
-                    <img src="{{ url_for('static', filename='uploads/' + lancamento.conta.logo_imagem) }}" 
-                         alt="Logo" style="width: 20px; height: auto; margin-right: 5px; border-radius: 3px;">
+                {% if lancamento.subcategoria %}
+                    {{ lancamento.subcategoria.categoria.nome }} / {{ lancamento.subcategoria.nome }}
+                {% else %}
+                    Cartão de Crédito
                 {% endif %}
-                {{ lancamento.conta.nome }}
+            </td>
+            <td>
+                {% if lancamento.cartao_credito_id %}
+                    {% if lancamento.cartao_credito.logo_imagem %}
+                        <img src="{{ url_for('static', filename='uploads/' + lancamento.cartao_credito.logo_imagem) }}" 
+                             alt="Logo" style="width: 20px; height: auto; margin-right: 5px; border-radius: 3px;">
+                    {% endif %}
+                    {{ lancamento.cartao_credito.nome }}
+                {% else %}
+                    {% if lancamento.conta.logo_imagem %}
+                        <img src="{{ url_for('static', filename='uploads/' + lancamento.conta.logo_imagem) }}" 
+                             alt="Logo" style="width: 20px; height: auto; margin-right: 5px; border-radius: 3px;">
+                    {% endif %}
+                    {{ lancamento.conta.nome }}
+                {% endif %}
             </td>
             <td class="{% if lancamento.tipo == 'Despesa' %}text-danger{% else %}text-success{% endif %}">
                 {{ lancamento.valor | currency }}

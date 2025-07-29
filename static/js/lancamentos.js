@@ -4,44 +4,83 @@ function toggleLancamentoFields() {
     const tipo = document.querySelector('input[name="tipo_lancamento"]:checked').value;
     const camposRD = document.getElementById('campos_receita_despesa');
     const camposTransf = document.getElementById('campos_transferencia');
+    const camposCartao = document.getElementById('campos_cartao_credito');
     
+    // Campos de Receita/Despesa
     const categoria = document.getElementById('categoria');
     const subcategoria = document.getElementById('subcategoria');
     const contaRD = document.getElementById('conta_id_rd');
 
+    // Campos de Transferência
     const contaOrigem = document.getElementById('conta_origem_id');
     const contaDestino = document.getElementById('conta_destino_id');
 
+    // Campos de Cartão de Crédito
+    const categoriaCartao = document.getElementById('categoria_cartao');
+    const subcategoriaCartao = document.getElementById('subcategoria_cartao');
+    const cartaoCredito = document.getElementById('cartao_credito_id');
+    const faturaInicioMes = document.getElementById('fatura_inicio_mes');
+
+    // Resetar todos os campos
+    camposRD.style.display = 'none';
+    camposTransf.style.display = 'none';
+    camposCartao.style.display = 'none';
+
+    // Desabilitar todos os campos
+    categoria.required = false;
+    subcategoria.required = false;
+    contaRD.required = false;
+    contaOrigem.required = false;
+    contaOrigem.disabled = true;
+    contaDestino.required = false;
+    contaDestino.disabled = true;
+    categoriaCartao.required = false;
+    categoriaCartao.disabled = true;
+    subcategoriaCartao.required = false;
+    subcategoriaCartao.disabled = true;
+    cartaoCredito.required = false;
+    cartaoCredito.disabled = true;
+    faturaInicioMes.required = false;
+    faturaInicioMes.disabled = true;
+
     if (tipo === 'Transferencia') {
-        camposRD.style.display = 'none';
         camposTransf.style.display = 'block';
-        
-        categoria.required = false;
-        subcategoria.required = false;
-        contaRD.required = false;
-        
         contaOrigem.required = true;
         contaOrigem.disabled = false;
         contaDestino.required = true;
         contaDestino.disabled = false;
-    } else {
-        camposRD.style.display = 'block';
-        camposTransf.style.display = 'none';
+    } else if (tipo === 'CartaoCredito') {
+        camposCartao.style.display = 'block';
+        categoriaCartao.required = true;
+        categoriaCartao.disabled = false;
+        subcategoriaCartao.required = true;
+        cartaoCredito.required = true;
+        cartaoCredito.disabled = false;
+        faturaInicioMes.required = true;
+        faturaInicioMes.disabled = false;
         
+        // Definir mês padrão (próximo mês)
+        const hoje = new Date();
+        const proximoMes = hoje.getMonth() + 2; // +1 para próximo mês, +1 porque getMonth() é 0-based
+        const mesDefault = proximoMes > 12 ? 1 : proximoMes;
+        faturaInicioMes.value = mesDefault;
+    } else {
+        // Receita ou Despesa
+        camposRD.style.display = 'block';
         categoria.required = true;
         subcategoria.required = true;
         contaRD.required = true;
-        
-        contaOrigem.required = false;
-        contaOrigem.disabled = true;
-        contaDestino.required = false;
-        contaDestino.disabled = true;
     }
 }
 
 function toggleParcelamentoFields(event) {
     const display = event.target.value === 'parcelada' ? 'flex' : 'none';
     document.getElementById('campos_parcelamento').style.display = display;
+}
+
+function toggleParcelamentoCartaoFields(event) {
+    const display = event.target.value === 'parcelada' ? 'flex' : 'none';
+    document.getElementById('campos_parcelamento_cartao').style.display = display;
 }
 
 function carregarSubcategorias() {
@@ -66,6 +105,35 @@ function carregarSubcategorias() {
             })
             .catch(error => {
                 console.error('Erro ao carregar subcategorias:', error);
+                subcategoriaSelect.innerHTML = '<option value="">Erro ao carregar</option>';
+            });
+    } else {
+        subcategoriaSelect.innerHTML = '<option value="">Selecione uma categoria primeiro</option>';
+    }
+}
+
+function carregarSubcategoriasCartao() {
+    const categoriaId = this.value;
+    const subcategoriaSelect = document.getElementById('subcategoria_cartao');
+    
+    subcategoriaSelect.innerHTML = '<option value="">Carregando...</option>';
+    subcategoriaSelect.disabled = true;
+    
+    if (categoriaId) {
+        fetch(`/api/subcategorias/${categoriaId}`)
+            .then(response => response.json())
+            .then(data => {
+                subcategoriaSelect.innerHTML = '<option value="">Selecione...</option>';
+                data.forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub.id;
+                    option.textContent = sub.nome;
+                    subcategoriaSelect.appendChild(option);
+                });
+                subcategoriaSelect.disabled = false;
+            })
+            .catch(error => {
+                console.error('Erro ao carregar subcategorias do cartão:', error);
                 subcategoriaSelect.innerHTML = '<option value="">Erro ao carregar</option>';
             });
     } else {
@@ -148,15 +216,26 @@ function inicializarEventos() {
         elem.addEventListener('change', toggleLancamentoFields);
     });
 
-    // Eventos de recorrência
+    // Eventos de recorrência para receita/despesa
     document.querySelectorAll('input[name="recorrencia_tipo"]').forEach(elem => {
         elem.addEventListener('change', toggleParcelamentoFields);
     });
 
-    // Evento de mudança de categoria
+    // Eventos de recorrência para cartão de crédito
+    document.querySelectorAll('input[name="recorrencia_tipo_cartao"]').forEach(elem => {
+        elem.addEventListener('change', toggleParcelamentoCartaoFields);
+    });
+
+    // Evento de mudança de categoria (receita/despesa)
     const categoriaSelect = document.getElementById('categoria');
     if (categoriaSelect) {
         categoriaSelect.addEventListener('change', carregarSubcategorias);
+    }
+
+    // Evento de mudança de categoria (cartão de crédito)
+    const categoriaCartaoSelect = document.getElementById('categoria_cartao');
+    if (categoriaCartaoSelect) {
+        categoriaCartaoSelect.addEventListener('change', carregarSubcategoriasCartao);
     }
 
     // Configurar modais

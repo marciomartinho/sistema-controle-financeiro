@@ -1,0 +1,554 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-credit-card-fill"></i> Extrato do Cartão de Crédito</h2>
+    <a href="{{ url_for('cartoes_bp.gerenciar_cartoes') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Voltar aos Cartões
+    </a>
+</div>
+
+<!-- Filtros -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('cartoes_bp.extrato_cartao') }}" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="cartao_id" class="form-label fw-bold">Cartão:</label>
+                <select name="cartao_id" id="cartao_id" class="form-select" required>
+                    <option value="">Selecione um cartão...</option>
+                    {% for cartao in cartoes %}
+                        <option value="{{ cartao.id }}" {% if cartao_id == cartao.id %}selected{% endif %}>
+                            {{ cartao.nome }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="mes" class="form-label fw-bold">Mês:</label>
+                <select name="mes" id="mes" class="form-select">
+                    {% for m in meses_disponiveis %}
+                        <option value="{{ m.id }}" {% if m.id == mes %}selected{% endif %}>{{ m.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="ano" class="form-label fw-bold">Ano:</label>
+                <select name="ano" id="ano" class="form-select">
+                    {% for a in anos_disponiveis %}
+                        <option value="{{ a }}" {% if a == ano %}selected{% endif %}>{{ a }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if cartao_selecionado %}
+<!-- Cabeçalho do Extrato -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h5 class="mb-0">
+                    {% if cartao_selecionado.logo_imagem %}
+                        <img src="{{ url_for('static', filename='uploads/' + cartao_selecionado.logo_imagem) }}" 
+                             alt="Logo" style="width: 30px; height: auto; margin-right: 10px; border-radius: 5px;">
+                    {% endif %}
+                    {{ cartao_selecionado.nome }}
+                </h5>
+                <small>
+                    Vencimento: Dia {{ cartao_selecionado.dia_vencimento }} | 
+                    Período: {{ meses_disponiveis[mes-1].nome }} de {{ ano }}
+                </small>
+            </div>
+            <div class="col-md-6 text-end">
+                <h4 class="mb-0">Total: {{ total_mes | currency }}</h4>
+                <small>{{ lancamentos|length }} lançamento(s)</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Lançamentos -->
+{% if lancamentos %}
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 12%;">Data</th>
+                        <th style="width: 25%;">Descrição</th>
+                        <th style="width: 20%;">Categoria</th>
+                        <th style="width: 12%;">Valor</th>
+                        <th style="width: 15%;">Recorrência</th>
+                        <th style="width: 16%; text-align: center;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lancamento in lancamentos %}
+                    <tr>
+                        <td>
+                            <strong>{{ lancamento.data_vencimento.strftime('%d/%m') }}</strong>
+                            <br>
+                            <small class="text-muted">{{ lancamento.data_vencimento.strftime('%Y') }}</small>
+                        </td>
+                        <td>
+                            <i class="bi bi-credit-card-fill text-primary me-2"></i>
+                            <strong>{{ lancamento.descricao }}</strong>
+                            {% if lancamento.recorrencia and lancamento.recorrencia.tipo == 'Parcelada' %}
+                                {% set parcelas = lancamento.recorrencia.lancamentos|sort(attribute='data_vencimento') %}
+                                {% set index = parcelas.index(lancamento) + 1 %}
+                                <br>
+                                <small class="text-muted">Parcela {{ index }}/{{ lancamento.recorrencia.total_parcelas }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if lancamento.subcategoria %}
+                                <i class="{{ lancamento.subcategoria.categoria.icone }}" 
+                                   style="color: {{ lancamento.subcategoria.categoria.cor }};"></i>
+                                {{ lancamento.subcategoria.categoria.nome }}
+                                <br>
+                                <small class="text-muted">{{ lancamento.subcategoria.nome }}</small>
+                            {% else %}
+                                <span class="text-muted">Sem categoria</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="fs-6 fw-bold text-danger">{{ lancamento.valor | currency }}</span>
+                        </td>
+                        <td>
+                            {% if lancamento.recorrencia_id %}
+                                {% if lancamento.recorrencia.tipo == 'Fixa' %}
+                                    <span class="badge bg-primary">Fixa Mensal</span>
+                                {% elif lancamento.recorrencia.tipo == 'Parcelada' %}
+                                    <span class="badge bg-warning">Parcelada</span>
+                                {% elif lancamento.recorrencia.tipo == 'Anual' %}
+                                    <span class="badge bg-info">Anual</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ lancamento.recorrencia.tipo }}</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-secondary">Única</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">
+                            {% if lancamento.recorrencia_id %}
+                                <!-- Lançamento de Recorrência -->
+                                <button type="button" class="btn btn-sm btn-outline-primary me-1" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#modalEditarRecorrencia"
+                                        data-lancamento-id="{{ lancamento.id }}"
+                                        data-recorrencia-id="{{ lancamento.recorrencia_id }}"
+                                        data-descricao="{{ lancamento.recorrencia.descricao_base }}"
+                                        data-valor="{{ lancamento.valor }}"
+                                        data-categoria-id="{{ lancamento.subcategoria.categoria_id if lancamento.subcategoria else '' }}"
+                                        data-subcategoria-id="{{ lancamento.subcategoria_id }}"
+                                        data-cartao-id="{{ lancamento.cartao_credito_id }}"
+                                        data-vencimento="{{ lancamento.data_vencimento.strftime('%Y-%m-%d') }}"
+                                        title="Editar Recorrência">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#modalExcluirRecorrencia"
+                                        data-lancamento-id="{{ lancamento.id }}"
+                                        data-recorrencia-id="{{ lancamento.recorrencia_id }}"
+                                        data-descricao="{{ lancamento.descricao }}"
+                                        data-vencimento="{{ lancamento.data_vencimento.strftime('%d/%m/%Y') }}"
+                                        title="Excluir Recorrência">
+                                    <i class="bi bi-trash-fill"></i>
+                                </button>
+                            {% else %}
+                                <!-- Lançamento Único -->
+                                <button type="button" class="btn btn-sm btn-outline-primary me-1" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#modalEditarUnico"
+                                        data-lancamento-id="{{ lancamento.id }}"
+                                        data-descricao="{{ lancamento.descricao }}"
+                                        data-valor="{{ lancamento.valor }}"
+                                        data-categoria-id="{{ lancamento.subcategoria.categoria_id if lancamento.subcategoria else '' }}"
+                                        data-subcategoria-id="{{ lancamento.subcategoria_id }}"
+                                        data-cartao-id="{{ lancamento.cartao_credito_id }}"
+                                        data-vencimento="{{ lancamento.data_vencimento.strftime('%Y-%m-%d') }}"
+                                        title="Editar Lançamento">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#modalExcluirUnico"
+                                        data-lancamento-id="{{ lancamento.id }}"
+                                        data-descricao="{{ lancamento.descricao }}"
+                                        title="Excluir Lançamento">
+                                    <i class="bi bi-trash-fill"></i>
+                                </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-group-divider">
+                    <tr class="table-primary">
+                        <td colspan="3" class="text-end fw-bold">TOTAL DO MÊS:</td>
+                        <td class="fw-bold fs-5 text-danger">{{ total_mes | currency }}</td>
+                        <td colspan="2"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info text-center">
+    <i class="bi bi-info-circle fs-1 text-primary d-block mb-3"></i>
+    <h5>Nenhum lançamento encontrado</h5>
+    <p class="mb-0">
+        Não há lançamentos para o cartão <strong>{{ cartao_selecionado.nome }}</strong> 
+        em <strong>{{ meses_disponiveis[mes-1].nome }}/{{ ano }}</strong>.
+    </p>
+</div>
+{% endif %}
+
+{% else %}
+<!-- Quando nenhum cartão está selecionado -->
+<div class="alert alert-light text-center">
+    <i class="bi bi-credit-card fs-1 text-muted d-block mb-3"></i>
+    <h5>Selecione um cartão para visualizar o extrato</h5>
+    <p class="mb-0">Use os filtros acima para escolher o cartão, mês e ano desejados.</p>
+</div>
+{% endif %}
+
+<!-- Modal para Editar Lançamento Único -->
+<div class="modal fade" id="modalEditarUnico" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Lançamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('cartoes_bp.editar_lancamento_cartao') }}">
+                <div class="modal-body">
+                    <input type="hidden" name="lancamento_id" id="edit_unico_lancamento_id">
+                    <input type="hidden" name="tipo_edicao" value="unico">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_unico_descricao" class="form-label">Descrição</label>
+                            <input type="text" class="form-control" name="descricao" id="edit_unico_descricao" required>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="edit_unico_valor" class="form-label">Valor (R$)</label>
+                            <input type="number" step="0.01" class="form-control" name="valor" id="edit_unico_valor" required>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="edit_unico_data" class="form-label">Data</label>
+                            <input type="date" class="form-control" name="data_vencimento" id="edit_unico_data" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="edit_unico_categoria" class="form-label">Categoria</label>
+                            <select class="form-select" name="categoria_id" id="edit_unico_categoria" required>
+                                <option value="">Selecione...</option>
+                                {% for cat in categorias %}
+                                    <option value="{{ cat.id }}">{{ cat.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="edit_unico_subcategoria" class="form-label">Subcategoria</label>
+                            <select class="form-select" name="subcategoria_id" id="edit_unico_subcategoria" required>
+                                <option value="">Selecione uma categoria primeiro</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="edit_unico_cartao" class="form-label">Cartão</label>
+                            <select class="form-select" name="cartao_id" id="edit_unico_cartao" required>
+                                {% for cartao in cartoes %}
+                                    <option value="{{ cartao.id }}">{{ cartao.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Excluir Lançamento Único -->
+<div class="modal fade" id="modalExcluirUnico" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('cartoes_bp.excluir_lancamento_cartao') }}">
+                <div class="modal-body">
+                    <input type="hidden" name="lancamento_id" id="del_unico_lancamento_id">
+                    <input type="hidden" name="tipo_exclusao" value="unico">
+                    
+                    <p>Você está prestes a deletar o lançamento:</p>
+                    <div class="alert alert-warning">
+                        <strong id="del_unico_descricao"></strong>
+                    </div>
+                    <p class="text-danger">Esta ação não pode ser desfeita.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Confirmar Exclusão</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Editar Recorrência -->
+<div class="modal fade" id="modalEditarRecorrencia" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Recorrência</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('cartoes_bp.editar_lancamento_cartao') }}">
+                <div class="modal-body">
+                    <input type="hidden" name="lancamento_id" id="edit_rec_lancamento_id">
+                    <input type="hidden" name="recorrencia_id" id="edit_rec_recorrencia_id">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_rec_descricao" class="form-label">Descrição</label>
+                            <input type="text" class="form-control" name="descricao" id="edit_rec_descricao" required>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="edit_rec_valor" class="form-label">Valor (R$)</label>
+                            <input type="number" step="0.01" class="form-control" name="valor" id="edit_rec_valor" required>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="edit_rec_data" class="form-label">A partir de</label>
+                            <input type="date" class="form-control" name="data_inicio" id="edit_rec_data" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="edit_rec_categoria" class="form-label">Categoria</label>
+                            <select class="form-select" name="categoria_id" id="edit_rec_categoria" required>
+                                <option value="">Selecione...</option>
+                                {% for cat in categorias %}
+                                    <option value="{{ cat.id }}">{{ cat.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="edit_rec_subcategoria" class="form-label">Subcategoria</label>
+                            <select class="form-select" name="subcategoria_id" id="edit_rec_subcategoria" required>
+                                <option value="">Selecione uma categoria primeiro</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="edit_rec_cartao" class="form-label">Cartão</label>
+                            <select class="form-select" name="cartao_id" id="edit_rec_cartao" required>
+                                {% for cartao in cartoes %}
+                                    <option value="{{ cartao.id }}">{{ cartao.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <fieldset class="mb-3">
+                        <legend class="fs-6">Escopo da Edição</legend>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_edicao" id="edicao_mes" value="apenas_mes" checked>
+                            <label class="form-check-label" for="edicao_mes">
+                                Editar apenas este mês
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_edicao" id="edicao_futuros" value="futuros">
+                            <label class="form-check-label" for="edicao_futuros">
+                                Editar a partir deste mês (futuros)
+                            </label>
+                        </div>
+                    </fieldset>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Excluir Recorrência -->
+<div class="modal fade" id="modalExcluirRecorrencia" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('cartoes_bp.excluir_lancamento_cartao') }}">
+                <div class="modal-body">
+                    <input type="hidden" name="lancamento_id" id="del_rec_lancamento_id">
+                    <input type="hidden" name="recorrencia_id" id="del_rec_recorrencia_id">
+                    
+                    <p>Você está prestes a deletar o lançamento:</p>
+                    <div class="alert alert-warning">
+                        <strong id="del_rec_descricao"></strong><br>
+                        <small>Vencimento: <span id="del_rec_vencimento"></span></small>
+                    </div>
+                    
+                    <fieldset>
+                        <legend class="fs-6">Escopo da Exclusão</legend>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_exclusao" id="exclusao_mes" value="apenas_mes" checked>
+                            <label class="form-check-label" for="exclusao_mes">
+                                Excluir apenas este mês
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_exclusao" id="exclusao_futuros" value="futuros">
+                            <label class="form-check-label" for="exclusao_futuros">
+                                Excluir a partir deste mês (futuros)
+                            </label>
+                        </div>
+                    </fieldset>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Confirmar Exclusão</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Script para gerenciar os modais
+document.addEventListener('DOMContentLoaded', function() {
+    // Modal Editar Único
+    const modalEditarUnico = document.getElementById('modalEditarUnico');
+    if (modalEditarUnico) {
+        modalEditarUnico.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            
+            document.getElementById('edit_unico_lancamento_id').value = button.getAttribute('data-lancamento-id');
+            document.getElementById('edit_unico_descricao').value = button.getAttribute('data-descricao');
+            document.getElementById('edit_unico_valor').value = button.getAttribute('data-valor');
+            document.getElementById('edit_unico_data').value = button.getAttribute('data-vencimento');
+            document.getElementById('edit_unico_categoria').value = button.getAttribute('data-categoria-id');
+            document.getElementById('edit_unico_cartao').value = button.getAttribute('data-cartao-id');
+            
+            // Carregar subcategorias se necessário
+            const categoriaId = button.getAttribute('data-categoria-id');
+            const subcategoriaId = button.getAttribute('data-subcategoria-id');
+            if (categoriaId) {
+                carregarSubcategorias('edit_unico_categoria', 'edit_unico_subcategoria', subcategoriaId);
+            }
+        });
+    }
+    
+    // Modal Excluir Único
+    const modalExcluirUnico = document.getElementById('modalExcluirUnico');
+    if (modalExcluirUnico) {
+        modalExcluirUnico.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            
+            document.getElementById('del_unico_lancamento_id').value = button.getAttribute('data-lancamento-id');
+            document.getElementById('del_unico_descricao').textContent = button.getAttribute('data-descricao');
+        });
+    }
+    
+    // Modal Editar Recorrência
+    const modalEditarRecorrencia = document.getElementById('modalEditarRecorrencia');
+    if (modalEditarRecorrencia) {
+        modalEditarRecorrencia.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            
+            document.getElementById('edit_rec_lancamento_id').value = button.getAttribute('data-lancamento-id');
+            document.getElementById('edit_rec_recorrencia_id').value = button.getAttribute('data-recorrencia-id');
+            document.getElementById('edit_rec_descricao').value = button.getAttribute('data-descricao');
+            document.getElementById('edit_rec_valor').value = button.getAttribute('data-valor');
+            document.getElementById('edit_rec_data').value = button.getAttribute('data-vencimento');
+            document.getElementById('edit_rec_categoria').value = button.getAttribute('data-categoria-id');
+            document.getElementById('edit_rec_cartao').value = button.getAttribute('data-cartao-id');
+            
+            // Carregar subcategorias se necessário
+            const categoriaId = button.getAttribute('data-categoria-id');
+            const subcategoriaId = button.getAttribute('data-subcategoria-id');
+            if (categoriaId) {
+                carregarSubcategorias('edit_rec_categoria', 'edit_rec_subcategoria', subcategoriaId);
+            }
+        });
+    }
+    
+    // Modal Excluir Recorrência
+    const modalExcluirRecorrencia = document.getElementById('modalExcluirRecorrencia');
+    if (modalExcluirRecorrencia) {
+        modalExcluirRecorrencia.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            
+            document.getElementById('del_rec_lancamento_id').value = button.getAttribute('data-lancamento-id');
+            document.getElementById('del_rec_recorrencia_id').value = button.getAttribute('data-recorrencia-id');
+            document.getElementById('del_rec_descricao').textContent = button.getAttribute('data-descricao');
+            document.getElementById('del_rec_vencimento').textContent = button.getAttribute('data-vencimento');
+        });
+    }
+});
+
+// Função para carregar subcategorias
+function carregarSubcategorias(categoriaSelectId, subcategoriaSelectId, subcategoriaSelecionada = null) {
+    const categoriaSelect = document.getElementById(categoriaSelectId);
+    const subcategoriaSelect = document.getElementById(subcategoriaSelectId);
+    const categoriaId = categoriaSelect.value;
+    
+    subcategoriaSelect.innerHTML = '<option value="">Carregando...</option>';
+    subcategoriaSelect.disabled = true;
+    
+    if (categoriaId) {
+        fetch(`/api/subcategorias/${categoriaId}`)
+            .then(response => response.json())
+            .then(data => {
+                subcategoriaSelect.innerHTML = '<option value="">Selecione...</option>';
+                data.forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub.id;
+                    option.textContent = sub.nome;
+                    if (subcategoriaSelecionada && sub.id == subcategoriaSelecionada) {
+                        option.selected = true;
+                    }
+                    subcategoriaSelect.appendChild(option);
+                });
+                subcategoriaSelect.disabled = false;
+            })
+            .catch(error => {
+                console.error('Erro ao carregar subcategorias:', error);
+                subcategoriaSelect.innerHTML = '<option value="">Erro ao carregar</option>';
+            });
+    } else {
+        subcategoriaSelect.innerHTML = '<option value="">Selecione uma categoria primeiro</option>';
+    }
+}
+
+// Event listeners para mudança de categoria
+document.getElementById('edit_unico_categoria')?.addEventListener('change', function() {
+    carregarSubcategorias('edit_unico_categoria', 'edit_unico_subcategoria');
+});
+
+document.getElementById('edit_rec_categoria')?.addEventListener('change', function() {
+    carregarSubcategorias('edit_rec_categoria', 'edit_rec_subcategoria');
+});
+</script>
+{% endblock %}

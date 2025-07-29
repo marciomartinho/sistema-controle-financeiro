@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Editar Lançamento: {{ lancamento.descricao }}</h2>
+<hr>
+
+<div class="card bg-light">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('lancamentos_bp.editar_lancamento_unico', id=lancamento.id) }}">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="descricao" class="form-label">Descrição</label>
+                    <input type="text" class="form-control" id="descricao" name="descricao" value="{{ lancamento.descricao }}" required>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="valor" class="form-label">Valor (R$)</label>
+                    <input type="number" step="0.01" class="form-control" id="valor" name="valor" value="{{ lancamento.valor }}" required>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="data_vencimento" class="form-label">Data de Vencimento</label>
+                    <input type="date" class="form-control" id="data_vencimento" name="data_vencimento" 
+                           value="{{ lancamento.data_vencimento.strftime('%Y-%m-%d') }}" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="categoria" class="form-label">Categoria</label>
+                    <select class="form-select" id="categoria" name="categoria" required>
+                        <option value="">Selecione...</option>
+                        {% for cat in categorias %}
+                            <option value="{{ cat.id }}" {% if lancamento.subcategoria and lancamento.subcategoria.categoria_id == cat.id %}selected{% endif %}>
+                                {{ cat.nome }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="subcategoria_id" class="form-label">Subcategoria</label>
+                    <select class="form-select" id="subcategoria_id" name="subcategoria_id" required>
+                        <option value="">Carregando...</option>
+                    </select>
+                </div>
+                
+                {% if lancamento.cartao_credito_id %}
+                    <!-- Lançamento de Cartão de Crédito -->
+                    <div class="col-md-4 mb-3">
+                        <label for="cartao_credito_id" class="form-label">Cartão de Crédito</label>
+                        <select class="form-select" id="cartao_credito_id" name="cartao_credito_id" required>
+                            <option value="">Selecione...</option>
+                            {% for cartao in cartoes %}
+                                <option value="{{ cartao.id }}" {% if lancamento.cartao_credito_id == cartao.id %}selected{% endif %}>
+                                    {{ cartao.nome }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% else %}
+                    <!-- Lançamento de Conta -->
+                    <div class="col-md-4 mb-3">
+                        <label for="conta_id" class="form-label">Conta</label>
+                        <select class="form-select" id="conta_id" name="conta_id" required>
+                            <option value="">Selecione...</option>
+                            {% for conta in contas %}
+                                <option value="{{ conta.id }}" {% if lancamento.conta_id == conta.id %}selected{% endif %}>
+                                    {{ conta.nome }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <div class="alert alert-info">
+                        <small>
+                            <strong>Informações do lançamento:</strong><br>
+                            <i class="bi bi-calendar-event"></i> Criado em: {{ lancamento.data_criacao.strftime('%d/%m/%Y') }}<br>
+                            <i class="bi bi-circle-fill {% if lancamento.status == 'Pago' %}text-success{% else %}text-warning{% endif %}"></i> 
+                            Status: {{ lancamento.status }}<br>
+                            {% if lancamento.data_pagamento %}
+                                <i class="bi bi-check-circle-fill text-success"></i> Pago em: {{ lancamento.data_pagamento.strftime('%d/%m/%Y') }}<br>
+                            {% endif %}
+                            <i class="bi bi-{% if lancamento.cartao_credito_id %}credit-card-fill{% else %}bank{% endif %}"></i> 
+                            Origem: 
+                            {% if lancamento.cartao_credito_id %}
+                                {{ lancamento.cartao_credito.nome }} (Cartão de Crédito)
+                            {% else %}
+                                {{ lancamento.conta.nome }} ({{ lancamento.conta.tipo_conta }})
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg"></i> Salvar Alterações
+                </button>
+                <a href="{{ url_for('lancamentos_bp.gerenciar_lancamentos') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function carregarSubcategorias() {
+    const categoriaId = document.getElementById('categoria').value;
+    const subcategoriaSelect = document.getElementById('subcategoria_id');
+    
+    subcategoriaSelect.innerHTML = '<option value="">Carregando...</option>';
+    subcategoriaSelect.disabled = true;
+    
+    if (categoriaId) {
+        fetch(`/api/subcategorias/${categoriaId}`)
+            .then(response => response.json())
+            .then(data => {
+                subcategoriaSelect.innerHTML = '<option value="">Selecione...</option>';
+                data.forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub.id;
+                    option.textContent = sub.nome;
+                    
+                    // Marcar como selecionado se for a subcategoria atual
+                    {% if lancamento.subcategoria_id %}
+                    if (sub.id == {{ lancamento.subcategoria_id }}) {
+                        option.selected = true;
+                    }
+                    {% endif %}
+                    
+                    subcategoriaSelect.appendChild(option);
+                });
+                subcategoriaSelect.disabled = false;
+            })
+            .catch(error => {
+                console.error('Erro ao carregar subcategorias:', error);
+                subcategoriaSelect.innerHTML = '<option value="">Erro ao carregar</option>';
+            });
+    } else {
+        subcategoriaSelect.innerHTML = '<option value="">Selecione uma categoria primeiro</option>';
+    }
+}
+
+// Carregar subcategorias quando a página carregar
+document.addEventListener('DOMContentLoaded', function() {
+    carregarSubcategorias();
+    
+    // Adicionar event listener para mudança de categoria
+    document.getElementById('categoria').addEventListener('change', carregarSubcategorias);
+});
+</script>
+
+{% if lancamento.recorrencia_id %}
+<div class="mt-4">
+    <div class="alert alert-warning">
+        <h6><i class="bi bi-exclamation-triangle-fill"></i> Atenção!</h6>
+        <p class="mb-0">
+            Este lançamento faz parte de uma recorrência ({{ lancamento.recorrencia.tipo }}). 
+            Alterações aqui afetam apenas este lançamento específico. 
+            Para alterar toda a recorrência, 
+            <a href="{{ url_for('lancamentos_bp.editar_recorrencia', id=lancamento.recorrencia_id) }}">clique aqui</a>.
+        </p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Editar Recorrência: {{ recorrencia.descricao_base }}</h2>
+<hr>
+
+<div class="card bg-light">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('lancamentos_bp.editar_recorrencia', id=recorrencia.id) }}">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="descricao" class="form-label">Descrição</label>
+                    <input type="text" class="form-control" id="descricao" name="descricao" value="{{ recorrencia.descricao_base }}" required>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="valor" class="form-label">Valor (R$)</label>
+                    <input type="number" step="0.01" class="form-control" id="valor" name="valor" 
+                           value="{{ primeiro_lancamento.valor if primeiro_lancamento else '' }}" required>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="data_inicio" class="form-label">Data de Início das Alterações</label>
+                    <input type="date" class="form-control" id="data_inicio" name="data_inicio" 
+                           value="{{ primeiro_lancamento.data_vencimento.strftime('%Y-%m-%d') if primeiro_lancamento else '' }}" required>
+                    <small class="form-text text-muted">A partir de qual data aplicar as mudanças</small>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="categoria" class="form-label">Categoria</label>
+                    <select class="form-select" id="categoria" name="categoria" required>
+                        <option value="">Selecione...</option>
+                        {% for cat in categorias %}
+                            <option value="{{ cat.id }}" 
+                                {% if primeiro_lancamento and primeiro_lancamento.subcategoria and primeiro_lancamento.subcategoria.categoria_id == cat.id %}selected{% endif %}>
+                                {{ cat.nome }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="subcategoria_id" class="form-label">Subcategoria</label>
+                    <select class="form-select" id="subcategoria_id" name="subcategoria_id" required>
+                        <option value="">Carregando...</option>
+                    </select>
+                </div>
+                
+                {% if primeiro_lancamento and primeiro_lancamento.cartao_credito_id %}
+                    <!-- Recorrência de Cartão de Crédito -->
+                    <div class="col-md-4 mb-3">
+                        <label for="cartao_credito_id" class="form-label">Cartão de Crédito</label>
+                        <select class="form-select" id="cartao_credito_id" name="cartao_credito_id" required>
+                            <option value="">Selecione...</option>
+                            {% for cartao in cartoes %}
+                                <option value="{{ cartao.id }}" 
+                                    {% if primeiro_lancamento.cartao_credito_id == cartao.id %}selected{% endif %}>
+                                    {{ cartao.nome }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% else %}
+                    <!-- Recorrência de Conta -->
+                    <div class="col-md-4 mb-3">
+                        <label for="conta_id" class="form-label">Conta</label>
+                        <select class="form-select" id="conta_id" name="conta_id" required>
+                            <option value="">Selecione...</option>
+                            {% for conta in contas %}
+                                <option value="{{ conta.id }}" 
+                                    {% if primeiro_lancamento and primeiro_lancamento.conta_id == conta.id %}selected{% endif %}>
+                                    {{ conta.nome }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
+            </div>
+
+            <fieldset class="row mb-3">
+                <legend class="col-form-label col-sm-2 pt-0">Escopo da Edição</legend>
+                <div class="col-sm-10">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="tipo_edicao" id="edicao_futuros" value="futuros" checked>
+                        <label class="form-check-label" for="edicao_futuros">
+                            Editar apenas os futuros (a partir da data selecionada)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="tipo_edicao" id="edicao_todos" value="todos">
+                        <label class="form-check-label" for="edicao_todos">
+                            Editar TODOS os lançamentos da recorrência (passados e futuros)
+                        </label>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-info-circle-fill"></i> Informações da Recorrência:</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small>
+                                    <i class="bi bi-calendar-event"></i> <strong>Criada em:</strong> {{ recorrencia.data_criacao.strftime('%d/%m/%Y') if recorrencia.data_criacao }}<br>
+                                    <i class="bi bi-arrow-repeat"></i> <strong>Tipo:</strong> {{ recorrencia.tipo }}<br>
+                                    <i class="bi bi-clock"></i> <strong>Frequência:</strong> {{ recorrencia.frequencia }}<br>
+                                    {% if recorrencia.total_parcelas %}
+                                        <i class="bi bi-list-ol"></i> <strong>Total de parcelas:</strong> {{ recorrencia.total_parcelas }}<br>
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <div class="col-md-6">
+                                <small>
+                                    <i class="bi bi-{% if primeiro_lancamento and primeiro_lancamento.cartao_credito_id %}credit-card-fill{% else %}bank{% endif %}"></i> 
+                                    <strong>Origem:</strong> 
+                                    {% if primeiro_lancamento and primeiro_lancamento.cartao_credito_id %}
+                                        {{ primeiro_lancamento.cartao_credito.nome }} (Cartão de Crédito)
+                                    {% elif primeiro_lancamento and primeiro_lancamento.conta_id %}
+                                        {{ primeiro_lancamento.conta.nome }} ({{ primeiro_lancamento.conta.tipo_conta }})
+                                    {% else %}
+                                        N/A
+                                    {% endif %}<br>
+                                    <i class="bi bi-currency-dollar"></i> <strong>Valor total:</strong> {{ (recorrencia.lancamentos|sum(attribute='valor')) | currency }}<br>
+                                    <i class="bi bi-list-check"></i> <strong>Lançamentos:</strong> {{ recorrencia.lancamentos|length }} items
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg"></i> Salvar Alterações
+                </button>
+                <a href="{{ url_for('lancamentos_bp.gerenciar_lancamentos') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="mt-4">
+    <h5>Próximos Lançamentos desta Recorrência</h5>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Data</th>
+                    <th>Descrição</th>
+                    <th>Valor</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set hoje = moment().date() %}
+                {% for lancamento in recorrencia.lancamentos|sort(attribute='data_vencimento') %}
+                    {% if loop.index0 < 10 %}  {# Mostrar apenas os próximos 10 #}
+                    <tr class="{% if lancamento.data_vencimento < hoje and lancamento.status == 'Pendente' %}table-warning{% elif lancamento.status == 'Pago' %}table-success{% endif %}">
+                        <td>{{ lancamento.data_vencimento.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ lancamento.descricao }}</td>
+                        <td class="{% if lancamento.tipo == 'Despesa' %}text-danger{% else %}text-success{% endif %}">
+                            {{ lancamento.valor | currency }}
+                        </td>
+                        <td>
+                            {% if lancamento.status == 'Pago' %}
+                                <span class="badge bg-success">Pago</span>
+                            {% elif lancamento.data_vencimento < hoje %}
+                                <span class="badge bg-warning">Atrasado</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Pendente</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function carregarSubcategorias() {
+    const categoriaId = document.getElementById('categoria').value;
+    const subcategoriaSelect = document.getElementById('subcategoria_id');
+    
+    subcategoriaSelect.innerHTML = '<option value="">Carregando...</option>';
+    subcategoriaSelect.disabled = true;
+    
+    if (categoriaId) {
+        fetch(`/api/subcategorias/${categoriaId}`)
+            .then(response => response.json())
+            .then(data => {
+                subcategoriaSelect.innerHTML = '<option value="">Selecione...</option>';
+                data.forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub.id;
+                    option.textContent = sub.nome;
+                    
+                    // Marcar como selecionado se for a subcategoria atual
+                    {% if primeiro_lancamento and primeiro_lancamento.subcategoria_id %}
+                    if (sub.id == {{ primeiro_lancamento.subcategoria_id }}) {
+                        option.selected = true;
+                    }
+                    {% endif %}
+                    
+                    subcategoriaSelect.appendChild(option);
+                });
+                subcategoriaSelect.disabled = false;
+            })
+            .catch(error => {
+                console.error('Erro ao carregar subcategorias:', error);
+                subcategoriaSelect.innerHTML = '<option value="">Erro ao carregar</option>';
+            });
+    } else {
+        subcategoriaSelect.innerHTML = '<option value="">Selecione uma categoria primeiro</option>';
+    }
+}
+
+// Carregar subcategorias quando a página carregar
+document.addEventListener('DOMContentLoaded', function() {
+    carregarSubcategorias();
+    
+    // Adicionar event listener para mudança de categoria
+    document.getElementById('categoria').addEventListener('change', carregarSubcategorias);
+});
+</script>
+
+<div class="mt-4">
+    <div class="alert alert-warning">
+        <h6><i class="bi bi-exclamation-triangle-fill"></i> Atenção!</h6>
+        <ul class="mb-0">
+            <li>Editar "apenas os futuros" preserva os lançamentos passados com seus valores originais</li>
+            <li>Editar "TODOS" altera também os lançamentos já realizados no passado</li>
+            <li>Lançamentos já pagos não terão seu status alterado, apenas os dados</li>
+            {% if primeiro_lancamento and primeiro_lancamento.cartao_credito_id %}
+            <li>Esta recorrência está vinculada ao cartão de crédito "{{ primeiro_lancamento.cartao_credito.nome }}"</li>
+            {% endif %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

@@ -6,7 +6,7 @@ from dateutil.relativedelta import relativedelta
 from decimal import Decimal
 
 from app import db
-from models import Conta, Categoria, Subcategoria, Lancamento, Recorrencia, TransferenciaGrupo
+from models import Conta, Categoria, Subcategoria, Lancamento, Recorrencia, TransferenciaGrupo, CartaoCredito
 
 lancamentos_bp = Blueprint(
     'lancamentos_bp', __name__,
@@ -75,6 +75,156 @@ def gerenciar_lancamentos():
                     lancamento_fixo = Lancamento(descricao=descricao, valor=float(valor_total), tipo=tipo_lancamento, data_vencimento=vencimento_mes, subcategoria_id=subcategoria_id, conta_id=conta_id, recorrencia_id=nova_recorrencia.id)
                     db.session.add(lancamento_fixo)
                 flash(f'Lançamento fixo criado para os próximos {total_meses} meses!', 'success')
+
+            elif recorrencia_tipo == 'anual':
+                frequencia = 'Anual'
+                total_anos = 5
+                nova_recorrencia = Recorrencia(descricao_base=descricao, tipo='Anual', total_parcelas=total_anos, frequencia=frequencia)
+                db.session.add(nova_recorrencia)
+                db.session.flush()
+
+                for i in range(total_anos):
+                    vencimento_anual = data_vencimento + relativedelta(years=i)
+                    lancamento_anual = Lancamento(descricao=descricao, valor=float(valor_total), tipo=tipo_lancamento, data_vencimento=vencimento_anual, subcategoria_id=subcategoria_id, conta_id=conta_id, recorrencia_id=nova_recorrencia.id)
+                    db.session.add(lancamento_anual)
+                flash(f'Lançamento anual criado para os próximos {total_anos} anos!', 'success')
+
+        elif tipo_lancamento == 'CartaoCredito':
+            # Lógica para Cartão de Crédito
+            descricao = request.form.get('descricao')
+            valor_total = Decimal(request.form.get('valor'))
+            data_vencimento_str = request.form.get('data_vencimento')
+            data_lancamento = datetime.strptime(data_vencimento_str, '%Y-%m-%d').date()
+            subcategoria_id = request.form.get('subcategoria_cartao_id')
+            cartao_credito_id = request.form.get('cartao_credito_id')
+            recorrencia_tipo = request.form.get('recorrencia_tipo_cartao')
+            fatura_inicio_mes = int(request.form.get('fatura_inicio_mes'))
+
+            # Validações específicas para cartão
+            if not cartao_credito_id:
+                flash('Você deve selecionar um cartão de crédito.', 'danger')
+                return redirect(url_for('lancamentos_bp.gerenciar_lancamentos'))
+            
+            if not fatura_inicio_mes:
+                flash('Você deve selecionar o mês da primeira fatura.', 'danger')
+                return redirect(url_for('lancamentos_bp.gerenciar_lancamentos'))
+
+            # Calcular ano correto para a fatura
+            ano_lancamento = data_lancamento.year
+            mes_lancamento = data_lancamento.month
+            
+            if fatura_inicio_mes <= mes_lancamento:
+                # Se o mês da fatura é menor ou igual ao mês atual, é ano seguinte
+                ano_fatura = ano_lancamento + 1
+            else:
+                # Se o mês da fatura é maior que o mês atual, é mesmo ano
+                ano_fatura = ano_lancamento
+
+            # Criar data de vencimento baseada na fatura escolhida (dia 1)
+            data_vencimento_fatura = datetime(ano_fatura, fatura_inicio_mes, 1).date()
+
+            if recorrencia_tipo == 'unica':
+                novo_lancamento = Lancamento(
+                    descricao=descricao, 
+                    valor=float(valor_total), 
+                    tipo='Despesa',  # Cartão sempre é despesa
+                    data_vencimento=data_vencimento_fatura, 
+                    subcategoria_id=subcategoria_id, 
+                    cartao_credito_id=cartao_credito_id,
+                    conta_id=None  # Não precisa de conta para cartão
+                )
+                db.session.add(novo_lancamento)
+                flash('Lançamento no cartão de crédito adicionado com sucesso!', 'success')
+
+            elif recorrencia_tipo == 'parcelada':
+                total_parcelas = int(request.form.get('num_parcelas_cartao', 2))
+                frequencia = request.form.get('frequencia_cartao', 'Mensal')
+                tipo_recorrencia = 'Parcelada'
+                valor_total_centavos = int(valor_total * 100)
+                valor_parcela_centavos = valor_total_centavos // total_parcelas
+                resto_centavos = valor_total_centavos % total_parcelas
+
+                nova_recorrencia = Recorrencia(descricao_base=descricao, tipo=tipo_recorrencia, total_parcelas=total_parcelas, frequencia=frequencia)
+                db.session.add(nova_recorrencia)
+                db.session.flush()
+
+                for i in range(total_parcelas):
+                    valor_parcela_atual_centavos = valor_parcela_centavos
+                    if i == total_parcelas - 1:
+                        valor_parcela_atual_centavos += resto_centavos
+                    valor_parcela_atual = float(Decimal(valor_parcela_atual_centavos) / 100)
+
+                    # Calcular vencimento baseado na fatura de início
+                    if frequencia == 'Semanal': 
+                        vencimento_parcela = data_vencimento_fatura + relativedelta(weeks=i)
+                    elif frequencia == 'Quinzenal': 
+                        vencimento_parcela = data_vencimento_fatura + relativedelta(days=i*15)
+                    elif frequencia == 'Anual': 
+                        vencimento_parcela = data_vencimento_fatura + relativedelta(years=i)
+                    else: 
+                        vencimento_parcela = data_vencimento_fatura + relativedelta(months=i)
+                    
+                    descricao_parcela = f"{descricao} ({i+1}/{total_parcelas})"
+                    
+                    lancamento_rec = Lancamento(
+                        descricao=descricao_parcela, 
+                        valor=valor_parcela_atual, 
+                        tipo='Despesa', 
+                        data_vencimento=vencimento_parcela, 
+                        subcategoria_id=subcategoria_id, 
+                        cartao_credito_id=cartao_credito_id,
+                        conta_id=None,
+                        recorrencia_id=nova_recorrencia.id
+                    )
+                    db.session.add(lancamento_rec)
+
+                flash(f'Parcelamento no cartão ({frequencia}) adicionado com sucesso!', 'success')
+                
+            elif recorrencia_tipo == 'fixa':
+                frequencia = 'Mensal'
+                total_meses = 60
+                nova_recorrencia = Recorrencia(descricao_base=descricao, tipo='Fixa', total_parcelas=total_meses, frequencia=frequencia)
+                db.session.add(nova_recorrencia)
+                db.session.flush()
+
+                for i in range(total_meses):
+                    # Calcular vencimento baseado na fatura de início
+                    vencimento_mes = data_vencimento_fatura + relativedelta(months=i)
+                    lancamento_fixo = Lancamento(
+                        descricao=descricao, 
+                        valor=float(valor_total), 
+                        tipo='Despesa', 
+                        data_vencimento=vencimento_mes, 
+                        subcategoria_id=subcategoria_id, 
+                        cartao_credito_id=cartao_credito_id,
+                        conta_id=None,
+                        recorrencia_id=nova_recorrencia.id
+                    )
+                    db.session.add(lancamento_fixo)
+                flash(f'Lançamento fixo no cartão criado para os próximos {total_meses} meses!', 'success')
+
+            elif recorrencia_tipo == 'anual':
+                frequencia = 'Anual'
+                total_anos = 5
+                nova_recorrencia = Recorrencia(descricao_base=descricao, tipo='Anual', total_parcelas=total_anos, frequencia=frequencia)
+                db.session.add(nova_recorrencia)
+                db.session.flush()
+
+                for i in range(total_anos):
+                    # Calcular vencimento anual baseado na fatura de início
+                    vencimento_anual = data_vencimento_fatura + relativedelta(years=i)
+                    lancamento_anual = Lancamento(
+                        descricao=descricao, 
+                        valor=float(valor_total), 
+                        tipo='Despesa', 
+                        data_vencimento=vencimento_anual, 
+                        subcategoria_id=subcategoria_id, 
+                        cartao_credito_id=cartao_credito_id,
+                        conta_id=None,
+                        recorrencia_id=nova_recorrencia.id
+                    )
+                    db.session.add(lancamento_anual)
+                flash(f'Lançamento anual no cartão criado para os próximos {total_anos} anos!', 'success')
         
         elif tipo_lancamento == 'Transferencia':
             descricao = request.form.get('descricao')
@@ -121,17 +271,20 @@ def gerenciar_lancamentos():
         db.session.commit()
         return redirect(url_for('lancamentos_bp.gerenciar_lancamentos'))
 
+    # Buscar dados para renderizar a página
     lancamentos_unicos = Lancamento.query.filter(Lancamento.recorrencia_id == None, Lancamento.transferencia_grupo_id == None).order_by(Lancamento.id.desc()).all()
     recorrencias = Recorrencia.query.order_by(Recorrencia.id.desc()).all()
     transferencias = TransferenciaGrupo.query.order_by(TransferenciaGrupo.id.desc()).all()
     
     contas = Conta.query.order_by(Conta.nome).all()
     categorias = Categoria.query.order_by(Categoria.nome).all()
+    cartoes = CartaoCredito.query.filter_by(ativo=True).order_by(CartaoCredito.nome).all()  # NOVO: buscar cartões ativos
     
     return render_template(
         'lancamentos.html', 
         contas=contas, 
         categorias=categorias,
+        cartoes=cartoes,  # NOVO: passar cartões para o template
         lancamentos_unicos=lancamentos_unicos,
         recorrencias=recorrencias,
         transferencias=transferencias
@@ -187,15 +340,25 @@ def editar_lancamento_unico(id):
         lancamento.descricao = request.form['descricao']
         lancamento.valor = float(request.form['valor'])
         lancamento.data_vencimento = datetime.strptime(request.form['data_vencimento'], '%Y-%m-%d').date()
-        lancamento.subcategoria_id = request.form['subcategoria_id']
-        lancamento.conta_id = request.form['conta_id']
+        
+        # Verificar se é lançamento de cartão ou conta
+        if lancamento.cartao_credito_id:
+            # Lançamento de cartão de crédito
+            lancamento.subcategoria_id = request.form['subcategoria_id']
+            lancamento.cartao_credito_id = request.form['cartao_credito_id']
+        else:
+            # Lançamento de conta
+            lancamento.subcategoria_id = request.form['subcategoria_id']
+            lancamento.conta_id = request.form['conta_id']
+        
         db.session.commit()
         flash('Lançamento atualizado com sucesso!', 'success')
         return redirect(url_for('lancamentos_bp.gerenciar_lancamentos'))
 
     categorias = Categoria.query.order_by(Categoria.nome).all()
     contas = Conta.query.order_by(Conta.nome).all()
-    return render_template('editar_lancamento_unico.html', lancamento=lancamento, categorias=categorias, contas=contas)
+    cartoes = CartaoCredito.query.filter_by(ativo=True).order_by(CartaoCredito.nome).all()
+    return render_template('editar_lancamento_unico.html', lancamento=lancamento, categorias=categorias, contas=contas, cartoes=cartoes)
 
 @lancamentos_bp.route('/lancamentos/editar_recorrencia/<int:id>', methods=['GET', 'POST'])
 def editar_recorrencia(id):
@@ -208,7 +371,12 @@ def editar_recorrencia(id):
         nova_descricao = request.form['descricao']
         novo_valor = float(request.form['valor'])
         nova_subcategoria_id = request.form['subcategoria_id']
-        nova_conta_id = request.form['conta_id']
+        
+        # Verificar se a recorrência é de cartão ou conta
+        if primeiro_lancamento and primeiro_lancamento.cartao_credito_id:
+            novo_cartao_id = request.form['cartao_credito_id']
+        else:
+            nova_conta_id = request.form['conta_id']
         
         recorrencia.descricao_base = nova_descricao
         
@@ -223,7 +391,13 @@ def editar_recorrencia(id):
         for lancamento in lancamentos_para_alterar:
             lancamento.valor = novo_valor
             lancamento.subcategoria_id = nova_subcategoria_id
-            lancamento.conta_id = nova_conta_id
+            
+            # Atualizar cartão ou conta conforme o tipo
+            if primeiro_lancamento and primeiro_lancamento.cartao_credito_id:
+                lancamento.cartao_credito_id = novo_cartao_id
+            else:
+                lancamento.conta_id = nova_conta_id
+                
             if recorrencia.tipo == 'Parcelada':
                 partes = lancamento.descricao.split('(')
                 if len(partes) > 1:
@@ -235,7 +409,8 @@ def editar_recorrencia(id):
 
     categorias = Categoria.query.order_by(Categoria.nome).all()
     contas = Conta.query.order_by(Conta.nome).all()
-    return render_template('editar_recorrencia.html', recorrencia=recorrencia, primeiro_lancamento=primeiro_lancamento, categorias=categorias, contas=contas)
+    cartoes = CartaoCredito.query.filter_by(ativo=True).order_by(CartaoCredito.nome).all()
+    return render_template('editar_recorrencia.html', recorrencia=recorrencia, primeiro_lancamento=primeiro_lancamento, categorias=categorias, contas=contas, cartoes=cartoes)
 
 @lancamentos_bp.route('/lancamentos/deletar_transferencia/<int:id>', methods=['POST'])
 def deletar_transferencia(id):
