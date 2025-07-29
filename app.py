@@ -2,6 +2,7 @@
 
 import os
 import locale
+from datetime import datetime  # ADICIONE ESTA LINHA
 from flask import Flask, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -34,6 +35,11 @@ app.register_blueprint(categorias_bp)
 app.register_blueprint(lancamentos_bp)
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(cartoes_bp)  # NOVO REGISTRO
+
+# --- ADICIONE ESTA FUNÇÃO PARA DISPONIBILIZAR 'now' NOS TEMPLATES ---
+@app.context_processor
+def inject_now():
+    return {'now': datetime.now}
 
 # --- FILTRO PERSONALIZADO E ROTA PRINCIPAL ---
 @app.template_filter('currency')

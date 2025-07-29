@@ -1,0 +1,248 @@
+/* ===== ESTILOS ESPECÍFICOS PARA CARTÕES ===== */
+
+/* Container principal */
+.cartoes-container {
+    max-width: 100%;
+}
+
+/* ===== FORMULÁRIO MODERNO ===== */
+.form-control-modern, .form-select-modern {
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background: var(--bg-secondary);
+    transition: var(--transition);
+}
+
+.form-control-modern:focus, .form-select-modern:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Header gradiente */
+.bg-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+/* ===== PREVIEW DE UPLOAD ===== */
+.upload-preview {
+    height: 150px;
+    border: 2px dashed var(--border-color);
+    border-radius: var(--border-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-light);
+    transition: var(--transition);
+}
+
+.upload-preview:hover {
+    border-color: var(--primary-color);
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.preview-placeholder {
+    text-align: center;
+    padding: 2rem;
+}
+
+/* ===== GRID DE CARTÕES ===== */
+.cartoes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+/* ===== CARDS DE CARTÃO ===== */
+.cartao-card {
+    transition: var(--transition);
+    overflow: hidden;
+}
+
+.cartao-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-xl);
+}
+
+/* Header do cartão */
+.cartao-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    position: relative;
+    padding: 1.5rem;
+    min-height: 120px;
+}
+
+.cartao-bg-pattern {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(30%, -30%);
+}
+
+.cartao-bg-pattern::before {
+    content: '';
+    position: absolute;
+    top: 40px;
+    left: -20px;
+    width: 60px;
+    height: 60px;
+    background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+/* ===== DETALHES NO CORPO DO CARTÃO ===== */
+.cartao-details {
+    border-radius: var(--border-radius-sm);
+    background: var(--bg-light);
+    padding: 1rem;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    font-size: 0.875rem;
+}
+
+.detail-item:last-child {
+    margin-bottom: 0;
+}
+
+.detail-label {
+    font-weight: 500;
+    margin-right: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.detail-value {
+    color: var(--text-primary);
+}
+
+/* ===== AÇÕES DO CARTÃO ===== */
+.cartao-actions .btn {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+}
+
+/* ===== CARDS DE ESTATÍSTICA ===== */
+.estatistica-card {
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.estatistica-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* ===== ESTADO VAZIO ===== */
+.empty-state {
+    padding: 2rem;
+}
+
+/* ===== RESPONSIVIDADE ===== */
+@media (max-width: 768px) {
+    .cartoes-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .cartao-header {
+        padding: 1rem;
+        min-height: 100px;
+    }
+    
+    .cartao-actions {
+        flex-direction: column;
+    }
+    
+    .cartao-actions .btn {
+        margin-bottom: 0.5rem;
+    }
+    
+    .cartao-actions .btn:last-child {
+        margin-bottom: 0;
+    }
+    
+    .detail-item {
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+    
+    .detail-label, .detail-value {
+        flex-basis: 100%;
+        margin-right: 0;
+    }
+    
+    .detail-value {
+        margin-top: 0.25rem;
+        margin-left: 1.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    .empty-state {
+        padding: 1rem;
+    }
+    
+    .cartao-details {
+        padding: 0.75rem;
+    }
+    
+    .d-flex.gap-2 {
+        flex-direction: column;
+        gap: 0.5rem !important;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+}
+
+/* ===== ANIMAÇÕES ESPECÍFICAS ===== */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.slide-in-up {
+    animation: slideInUp 0.6s ease-out forwards;
+}
+
+/* ===== CORES ESPECÍFICAS ===== */
+.text-purple {
+    color: #6f42c1 !important;
+}
+
+.bg-purple {
+    background-color: #6f42c1 !important;
+}
+
+/* ===== HOVER EFFECTS ===== */
+.cartao-actions .btn:hover {
+    transform: translateY(-2px);
+}
+
+/* ===== CARTÕES INATIVOS ===== */
+.cartao-card[data-inativo="true"] {
+    opacity: 0.7;
+}
+
+.cartao-card[data-inativo="true"] .cartao-header {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+}

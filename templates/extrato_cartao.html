@@ -147,7 +147,7 @@
     <!-- Status da Fatura -->
     <div class="row mb-4">
         <div class="col-md-8">
-            <div class="card border-0 shadow-sm h-100">
+            <div class="card border-0 shadow-sm h-100 status-card">
                 <div class="card-body">
                     {% set fatura_paga = cartao_selecionado.fatura_paga_mes(ano, mes) %}
                     <div class="d-flex align-items-center justify-content-between">
@@ -192,7 +192,7 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
+            <div class="card border-0 shadow-sm h-100 status-card info">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between h-100">
                         <div class="d-flex align-items-center">
@@ -211,8 +211,13 @@
                             </div>
                         </div>
                         <div class="text-end">
-                            {% set dias_vencimento = ((cartao_selecionado.dia_vencimento if mes < 12 else cartao_selecionado.dia_vencimento)|int - (moment().day if mes == moment().month and ano == moment().year else 0)) %}
-                            {% if dias_vencimento > 0 and mes == moment().month and ano == moment().year %}
+                            {% set data_atual = now() %}
+                            {% if mes == data_atual.month and ano == data_atual.year %}
+                                {% set dias_vencimento = cartao_selecionado.dia_vencimento - data_atual.day %}
+                            {% else %}
+                                {% set dias_vencimento = -1 %}
+                            {% endif %}
+                            {% if dias_vencimento > 0 %}
                                 <span class="badge bg-info">{{ dias_vencimento }} dias</span>
                             {% else %}
                                 <span class="badge bg-secondary">-</span>
@@ -418,36 +423,36 @@
                             <td>
                                 {% if lancamento.recorrencia_id %}
                                     {% if lancamento.recorrencia.tipo == 'Fixa' %}
-                                        <span class="badge bg-primary bg-opacity-10 text-primary">
+                                        <span class="badge badge-recorrencia badge-fixa">
                                             <i class="bi bi-calendar-month me-1"></i>
                                             Fixa Mensal
                                         </span>
                                     {% elif lancamento.recorrencia.tipo == 'Parcelada' %}
-                                        <span class="badge bg-warning bg-opacity-10 text-warning">
+                                        <span class="badge badge-recorrencia badge-parcelada">
                                             <i class="bi bi-credit-card-2-front me-1"></i>
                                             Parcelada
                                         </span>
                                     {% elif lancamento.recorrencia.tipo == 'Anual' %}
-                                        <span class="badge bg-info bg-opacity-10 text-info">
+                                        <span class="badge badge-recorrencia badge-anual">
                                             <i class="bi bi-calendar-year me-1"></i>
                                             Anual
                                         </span>
                                     {% else %}
-                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                        <span class="badge badge-recorrencia bg-secondary">
                                             <i class="bi bi-arrow-repeat me-1"></i>
                                             {{ lancamento.recorrencia.tipo }}
                                         </span>
                                     {% endif %}
                                 {% else %}
-                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                    <span class="badge badge-recorrencia badge-unica">
                                         <i class="bi bi-1-circle me-1"></i>
                                         Única
                                     </span>
                                 {% endif %}
                             </td>
                             <td class="text-center">
-                                {% if lancamento.recorrencia_id %}
-                                    <div class="btn-group btn-group-sm">
+                                <div class="btn-group btn-group-sm">
+                                    {% if lancamento.recorrencia_id %}
                                         <button type="button" class="btn btn-outline-primary" 
                                                 data-bs-toggle="modal" 
                                                 data-bs-target="#modalEditarRecorrencia"
@@ -472,9 +477,7 @@
                                                 title="Excluir Recorrência">
                                             <i class="bi bi-trash-fill"></i>
                                         </button>
-                                    </div>
-                                {% else %}
-                                    <div class="btn-group btn-group-sm">
+                                    {% else %}
                                         <button type="button" class="btn btn-outline-primary" 
                                                 data-bs-toggle="modal" 
                                                 data-bs-target="#modalEditarUnico"
@@ -496,8 +499,8 @@
                                                 title="Excluir Lançamento">
                                             <i class="bi bi-trash-fill"></i>
                                         </button>
-                                    </div>
-                                {% endif %}
+                                    {% endif %}
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -567,7 +570,7 @@
     </div>
     {% endif %}
 
-    <!-- Resumo do Período (se houver lançamentos) -->
+    <!-- Resumo do Período -->
     {% if cartao_selecionado and lancamentos %}
     <div class="row mt-4">
         <div class="col-md-3 mb-3">
@@ -618,7 +621,7 @@
     {% endif %}
 </div>
 
-<!-- Modais (mantidos os originais com estilos modernizados) -->
+<!-- Modais -->
 <!-- Modal para Editar Lançamento Único -->
 <div class="modal fade" id="modalEditarUnico" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -861,451 +864,12 @@
         </div>
     </div>
 </div>
-
-<script>
-// Toggle entre vistas
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('compactView').addEventListener('change', function() {
-        if (this.checked) {
-            document.getElementById('compactViewContent').style.display = 'block';
-            document.getElementById('detailedViewContent').style.display = 'none';
-        }
-    });
-    
-    document.getElementById('detailedView').addEventListener('change', function() {
-        if (this.checked) {
-            document.getElementById('compactViewContent').style.display = 'none';
-            document.getElementById('detailedViewContent').style.display = 'block';
-        }
-    });
-    
-    // Modais - mantido o código original
-    const modalEditarUnico = document.getElementById('modalEditarUnico');
-    if (modalEditarUnico) {
-        modalEditarUnico.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            
-            document.getElementById('edit_unico_lancamento_id').value = button.getAttribute('data-lancamento-id');
-            document.getElementById('edit_unico_descricao').value = button.getAttribute('data-descricao');
-            document.getElementById('edit_unico_valor').value = button.getAttribute('data-valor');
-            document.getElementById('edit_unico_data').value = button.getAttribute('data-vencimento');
-            document.getElementById('edit_unico_categoria').value = button.getAttribute('data-categoria-id');
-            document.getElementById('edit_unico_cartao').value = button.getAttribute('data-cartao-id');
-            
-            const categoriaId = button.getAttribute('data-categoria-id');
-            const subcategoriaId = button.getAttribute('data-subcategoria-id');
-            if (categoriaId) {
-                carregarSubcategorias('edit_unico_categoria', 'edit_unico_subcategoria', subcategoriaId);
-            }
-        });
-    }
-    
-    const modalExcluirUnico = document.getElementById('modalExcluirUnico');
-    if (modalExcluirUnico) {
-        modalExcluirUnico.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            
-            document.getElementById('del_unico_lancamento_id').value = button.getAttribute('data-lancamento-id');
-            document.getElementById('del_unico_descricao').textContent = button.getAttribute('data-descricao');
-        });
-    }
-    
-    const modalEditarRecorrencia = document.getElementById('modalEditarRecorrencia');
-    if (modalEditarRecorrencia) {
-        modalEditarRecorrencia.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            
-            document.getElementById('edit_rec_lancamento_id').value = button.getAttribute('data-lancamento-id');
-            document.getElementById('edit_rec_recorrencia_id').value = button.getAttribute('data-recorrencia-id');
-            document.getElementById('edit_rec_descricao').value = button.getAttribute('data-descricao');
-            document.getElementById('edit_rec_valor').value = button.getAttribute('data-valor');
-            document.getElementById('edit_rec_data').value = button.getAttribute('data-vencimento');
-            document.getElementById('edit_rec_categoria').value = button.getAttribute('data-categoria-id');
-            document.getElementById('edit_rec_cartao').value = button.getAttribute('data-cartao-id');
-            
-            const categoriaId = button.getAttribute('data-categoria-id');
-            const subcategoriaId = button.getAttribute('data-subcategoria-id');
-            if (categoriaId) {
-                carregarSubcategorias('edit_rec_categoria', 'edit_rec_subcategoria', subcategoriaId);
-            }
-        });
-    }
-    
-    const modalExcluirRecorrencia = document.getElementById('modalExcluirRecorrencia');
-    if (modalExcluirRecorrencia) {
-        modalExcluirRecorrencia.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            
-            document.getElementById('del_rec_lancamento_id').value = button.getAttribute('data-lancamento-id');
-            document.getElementById('del_rec_recorrencia_id').value = button.getAttribute('data-recorrencia-id');
-            document.getElementById('del_rec_descricao').textContent = button.getAttribute('data-descricao');
-            document.getElementById('del_rec_vencimento').textContent = button.getAttribute('data-vencimento');
-        });
-    }
-});
-
-// Função para carregar subcategorias
-function carregarSubcategorias(categoriaSelectId, subcategoriaSelectId, subcategoriaSelecionada = null) {
-    const categoriaSelect = document.getElementById(categoriaSelectId);
-    const subcategoriaSelect = document.getElementById(subcategoriaSelectId);
-    const categoriaId = categoriaSelect.value;
-    
-    subcategoriaSelect.innerHTML = '<option value="">Carregando...</option>';
-    subcategoriaSelect.disabled = true;
-    
-    if (categoriaId) {
-        fetch(`/api/subcategorias/${categoriaId}`)
-            .then(response => response.json())
-            .then(data => {
-                subcategoriaSelect.innerHTML = '<option value="">Selecione...</option>';
-                data.forEach(sub => {
-                    const option = document.createElement('option');
-                    option.value = sub.id;
-                    option.textContent = sub.nome;
-                    if (subcategoriaSelecionada && sub.id == subcategoriaSelecionada) {
-                        option.selected = true;
-                    }
-                    subcategoriaSelect.appendChild(option);
-                });
-                subcategoriaSelect.disabled = false;
-            })
-            .catch(error => {
-                console.error('Erro ao carregar subcategorias:', error);
-                subcategoriaSelect.innerHTML = '<option value="">Erro ao carregar</option>';
-            });
-    } else {
-        subcategoriaSelect.innerHTML = '<option value="">Selecione uma categoria primeiro</option>';
-    }
-}
-
-document.getElementById('edit_unico_categoria')?.addEventListener('change', function() {
-    carregarSubcategorias('edit_unico_categoria', 'edit_unico_subcategoria');
-});
-
-document.getElementById('edit_rec_categoria')?.addEventListener('change', function() {
-    carregarSubcategorias('edit_rec_categoria', 'edit_rec_subcategoria');
-});
-</script>
+{% endblock %}
 
 {% block scripts %}
-<style>
-/* Estilos específicos para a página de extrato */
-.extrato-container {
-    max-width: 100%;
-}
+<!-- CSS específico para extrato do cartão -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/extrato_cartao.css') }}">
 
-/* Campos de formulário modernos */
-.form-control-modern, .form-select-modern {
-    padding: 0.75rem 1rem;
-    border: 2px solid var(--border-color);
-    border-radius: var(--border-radius-sm);
-    background: var(--bg-secondary);
-    transition: var(--transition);
-}
-
-.form-control-modern:focus, .form-select-modern:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-}
-
-/* Header gradiente */
-.bg-gradient {
-    background: var(--gradient-primary) !important;
-}
-
-/* Header do cartão */
-.cartao-header-card {
-    overflow: hidden;
-}
-
-.cartao-header-bg {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    position: relative;
-}
-
-.cartao-pattern {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 200px;
-    height: 200px;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-    border-radius: 50%;
-    transform: translate(50%, -50%);
-}
-
-.cartao-pattern::before {
-    content: '';
-    position: absolute;
-    top: 100px;
-    left: -50px;
-    width: 150px;
-    height: 150px;
-    background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
-    border-radius: 50%;
-}
-
-/* Lista compacta de lançamentos */
-.lancamentos-compactos {
-    padding: 0;
-}
-
-.lancamento-item {
-    border-bottom: 1px solid var(--border-color);
-    transition: var(--transition);
-}
-
-.lancamento-item:last-child {
-    border-bottom: none;
-}
-
-.lancamento-item:hover {
-    background: var(--bg-light);
-}
-
-.lancamento-content {
-    display: flex;
-    align-items: center;
-    padding: 1.25rem 1.5rem;
-    gap: 1rem;
-}
-
-.lancamento-icon {
-    flex-shrink: 0;
-}
-
-.lancamento-info {
-    flex-grow: 1;
-    min-width: 0;
-}
-
-.lancamento-descricao {
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.25rem;
-}
-
-.lancamento-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    font-size: 0.875rem;
-    color: var(--text-muted);
-}
-
-.lancamento-meta span {
-    display: flex;
-    align-items: center;
-}
-
-.recorrencia-badge {
-    background: var(--bg-light);
-    padding: 0.125rem 0.5rem;
-    border-radius: 50px;
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-}
-
-.lancamento-valor {
-    flex-shrink: 0;
-    text-align: right;
-}
-
-.valor-principal {
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: var(--danger-color);
-}
-
-.lancamento-actions {
-    flex-shrink: 0;
-    display: flex;
-    gap: 0.5rem;
-    opacity: 0;
-    transition: var(--transition);
-}
-
-.lancamento-item:hover .lancamento-actions {
-    opacity: 1;
-}
-
-/* Tabela detalhada */
-.table-row-hover {
-    transition: var(--transition);
-}
-
-.table-row-hover:hover {
-    background: var(--bg-light) !important;
-    transform: scale(1.01);
-}
-
-/* Cards de estatística */
-.estatistica-card {
-    transition: var(--transition);
-    cursor: pointer;
-}
-
-.estatistica-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-lg);
-}
-
-/* Estado vazio */
-.empty-state {
-    padding: 2rem;
-}
-
-/* Cor roxa para elementos específicos */
-.text-purple {
-    color: #6f42c1 !important;
-}
-
-.bg-purple {
-    background-color: #6f42c1 !important;
-}
-
-/* Responsividade */
-@media (max-width: 768px) {
-    .lancamento-content {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.75rem;
-    }
-    
-    .lancamento-info {
-        width: 100%;
-    }
-    
-    .d-flex.justify-content-between {
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    
-    .lancamento-valor {
-        text-align: left;
-    }
-    
-    .lancamento-actions {
-        opacity: 1;
-        margin-top: 0.5rem;
-    }
-    
-    .lancamento-meta {
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    
-    .extrato-totals {
-        text-align: left !important;
-        margin-top: 1rem;
-    }
-    
-    .cartao-info {
-        flex-direction: column;
-        align-items: flex-start !important;
-    }
-    
-    .cartao-info span.mx-2 {
-        display: none;
-    }
-}
-
-@media (max-width: 576px) {
-    .card-body {
-        padding: 1rem;
-    }
-    
-    .lancamento-content {
-        padding: 1rem;
-    }
-    
-    .cartao-header-bg .row {
-        text-align: center;
-    }
-    
-    .cartao-header-bg .col-md-6:last-child {
-        margin-top: 1rem;
-    }
-    
-    .d-flex.gap-2 {
-        flex-direction: column;
-        gap: 0.5rem !important;
-    }
-    
-    .btn {
-        width: 100%;
-    }
-}
-
-/* Animações */
-@keyframes slideInLeft {
-    from {
-        opacity: 0;
-        transform: translateX(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-.lancamento-item {
-    animation: slideInLeft 0.3s ease-out;
-}
-
-.lancamento-item:nth-child(n) {
-    animation-delay: calc(var(--animation-order, 0) * 0.05s);
-}
-
-/* Scrollbar personalizada */
-.lancamentos-compactos {
-    max-height: 70vh;
-    overflow-y: auto;
-}
-
-.lancamentos-compactos::-webkit-scrollbar {
-    width: 4px;
-}
-
-.lancamentos-compactos::-webkit-scrollbar-track {
-    background: var(--bg-light);
-    border-radius: 2px;
-}
-
-.lancamentos-compactos::-webkit-scrollbar-thumb {
-    background: var(--primary-color);
-    border-radius: 2px;
-}
-
-.lancamentos-compactos::-webkit-scrollbar-thumb:hover {
-    background: var(--primary-dark);
-}
-
-/* Destaque para lançamentos parcelados */
-.lancamento-item[data-parcelado="true"] {
-    border-left: 3px solid var(--warning-color);
-}
-
-/* Animação no carregamento */
-.lancamento-item {
-    --animation-order: 0;
-}
-
-/* Estilo para botões de ação que aparecem no hover */
-.lancamento-actions .btn {
-    border: none;
-    background: var(--bg-secondary);
-    color: var(--text-secondary);
-    transition: var(--transition);
-}
-
-.lancamento-actions .btn:hover {
-    background: var(--primary-color);
-    color: white;
-    transform: translateY(-1px);
-}
-
-.lancamento-actions .btn.btn-outline-danger:hover {
-    background: var(--danger-color);
-    color: white;
-}
+<!-- JavaScript específico para extrato do cartão -->
+<script src="{{ url_for('static', filename='js/extrato_cartao.js') }}"></script>
+{% endblock %}

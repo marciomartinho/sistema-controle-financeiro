@@ -1,0 +1,335 @@
+/* ===== ESTILOS ESPECÍFICOS PARA CONTAS ===== */
+
+/* Container principal */
+.contas-container {
+    max-width: 100%;
+}
+
+/* ===== FORMULÁRIO MODERNO ===== */
+.form-control-modern, .form-select-modern {
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background: var(--bg-secondary);
+    transition: var(--transition);
+}
+
+.form-control-modern:focus, .form-select-modern:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Header gradiente */
+.bg-gradient {
+    background: var(--gradient-primary) !important;
+}
+
+/* ===== CARDS DE RESUMO ===== */
+.resumo-card {
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.resumo-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.corrente-card:hover {
+    border-left: 4px solid var(--primary-color);
+}
+
+.investimento-card:hover {
+    border-left: 4px solid var(--success-color);
+}
+
+.total-card:hover {
+    border-left: 4px solid var(--warning-color);
+}
+
+/* ===== LISTA DE CONTAS ===== */
+.contas-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.conta-item {
+    padding: 0.75rem 0;
+    transition: var(--transition);
+}
+
+.conta-item:hover {
+    background: var(--bg-light);
+    border-radius: var(--border-radius-sm);
+    padding: 0.75rem;
+    margin: 0 -0.75rem;
+}
+
+.conta-nome {
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.conta-saldo {
+    font-size: 1.1rem;
+}
+
+.conta-actions .btn {
+    opacity: 0.7;
+    transition: var(--transition);
+}
+
+.conta-item:hover .conta-actions .btn {
+    opacity: 1;
+}
+
+/* ===== TABELA MODERNA ===== */
+.table-row-hover {
+    transition: var(--transition);
+}
+
+.table-row-hover:hover {
+    background: var(--bg-light) !important;
+    transform: scale(1.01);
+}
+
+/* ===== ESTADO VAZIO ===== */
+.empty-state {
+    padding: 2rem;
+}
+
+/* ===== RESPONSIVIDADE ===== */
+@media (max-width: 768px) {
+    .resumo-card {
+        margin-bottom: 1rem;
+    }
+    
+    .conta-item {
+        padding: 1rem 0;
+    }
+    
+    .conta-item:hover {
+        margin: 0;
+        padding: 1rem;
+    }
+    
+    .conta-logo {
+        margin-right: 1rem !important;
+    }
+    
+    .d-flex.align-items-center {
+        flex-wrap: wrap;
+    }
+    
+    .conta-actions {
+        margin-top: 0.5rem;
+        margin-left: 0 !important;
+        width: 100%;
+    }
+    
+    .d-flex.gap-2 {
+        flex-direction: column;
+        gap: 0.5rem !important;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    .empty-state {
+        padding: 1rem;
+    }
+    
+    .resumo-card .card-body {
+        padding: 2rem 1rem;
+    }
+    
+    .row.mb-4 .col-md-6 {
+        margin-bottom: 1rem;
+    }
+    
+    .row.mb-4 .col-md-4 {
+        margin-bottom: 1rem;
+    }
+}
+
+/* ===== ANIMAÇÕES ===== */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.slide-in {
+    animation: slideInLeft 0.4s ease-out forwards;
+}
+
+/* ===== SCROLLBAR PERSONALIZADA ===== */
+.contas-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.contas-list::-webkit-scrollbar-track {
+    background: var(--bg-light);
+    border-radius: 2px;
+}
+
+.contas-list::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 2px;
+}
+
+.contas-list::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+}
+
+/* ===== MELHORIAS NO FORMULÁRIO ===== */
+.form-control-modern[type="file"] {
+    padding: 0.5rem 1rem;
+}
+
+.form-control-modern[type="file"]::-webkit-file-upload-button {
+    padding: 0.375rem 0.75rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.form-control-modern[type="file"]::-webkit-file-upload-button:hover {
+    background: var(--primary-dark);
+}
+
+/* ===== LOGO DAS CONTAS ===== */
+.conta-logo img {
+    border: 2px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.conta-item:hover .conta-logo img {
+    border-color: var(--primary-color);
+    transform: scale(1.05);
+}
+
+/* ===== BADGES PERSONALIZADOS ===== */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 50px;
+    font-weight: 500;
+}
+
+/* ===== MELHORIAS DE ACESSIBILIDADE ===== */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ===== ESTADOS DE FOCO ===== */
+.btn:focus,
+.form-control:focus,
+.form-select:focus {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+    outline: none;
+}
+
+/* ===== LOADING STATES ===== */
+.loading-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: var(--border-radius-sm);
+    height: 1rem;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* ===== TRANSIÇÕES SUAVES ===== */
+.smooth-transition {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== INDICADORES VISUAIS ===== */
+.conta-item[data-tipo="Corrente"]::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 30px;
+    background: var(--primary-color);
+    border-radius: 2px;
+}
+
+.conta-item[data-tipo="Investimento"]::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 30px;
+    background: var(--success-color);
+    border-radius: 2px;
+}
+
+/* ===== EFEITOS DE HOVER APRIMORADOS ===== */
+.resumo-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, transparent 50%);
+    opacity: 0;
+    transition: var(--transition);
+    border-radius: var(--border-radius);
+}
+
+.resumo-card:hover::before {
+    opacity: 1;
+}

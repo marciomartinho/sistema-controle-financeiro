@@ -61,7 +61,7 @@
                             <i class="bi bi-list-ul text-primary"></i>
                             Tipo de Conta
                         </label>
-                        <select class="form-select form-control-modern" id="tipo_conta" name="tipo_conta" onchange="toggleInvestimento()">
+                        <select class="form-select form-control-modern" id="tipo_conta" name="tipo_conta">
                             <option value="Corrente">💳 Conta Corrente</option>
                             <option value="Investimento">📈 Investimento</option>
                         </select>
@@ -154,7 +154,7 @@
                 <div class="card-body pt-3">
                     <div class="contas-list">
                         {% for conta in contas_corrente %}
-                        <div class="conta-item">
+                        <div class="conta-item" data-tipo="Corrente">
                             <div class="d-flex align-items-center">
                                 <div class="conta-logo me-3">
                                     {% if conta.logo_imagem %}
@@ -212,7 +212,7 @@
                 <div class="card-body pt-3">
                     <div class="contas-list">
                         {% for conta in contas_investimento %}
-                        <div class="conta-item">
+                        <div class="conta-item" data-tipo="Investimento">
                             <div class="d-flex align-items-center">
                                 <div class="conta-logo me-3">
                                     {% if conta.logo_imagem %}
@@ -274,10 +274,10 @@
                             <br>
                             Você pode adicionar contas correntes, poupanças e investimentos.
                         </p>
-                        <a href="#" onclick="document.getElementById('nome').focus()" class="btn btn-primary">
+                        <button onclick="ContasManager.focusFirstField()" class="btn btn-primary">
                             <i class="bi bi-plus-lg"></i>
                             Cadastrar Primeira Conta
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -425,218 +425,12 @@
         </div>
     </div>
 </div>
-
-<script>
-function toggleInvestimento() {
-    var tipoConta = document.getElementById('tipo_conta').value;
-    var campoInvestimento = document.getElementById('campo_tipo_investimento');
-    var inputInvestimento = document.getElementById('tipo_investimento');
-    
-    if (tipoConta === 'Investimento') {
-        campoInvestimento.style.display = 'block';
-        inputInvestimento.required = true;
-    } else {
-        campoInvestimento.style.display = 'none';
-        inputInvestimento.required = false;
-        inputInvestimento.value = '';
-    }
-}
-
-// Animações para os cards de resumo
-document.addEventListener('DOMContentLoaded', function() {
-    const resumoCards = document.querySelectorAll('.resumo-card');
-    resumoCards.forEach((card, index) => {
-        card.style.animationDelay = `${index * 0.1}s`;
-        card.classList.add('fade-in');
-    });
-    
-    // Animações para os itens das contas
-    const contaItems = document.querySelectorAll('.conta-item');
-    contaItems.forEach((item, index) => {
-        item.style.animationDelay = `${(index * 0.05) + 0.3}s`;
-        item.classList.add('slide-in');
-    });
-});
-</script>
+{% endblock %}
 
 {% block scripts %}
-<style>
-/* Estilos específicos para a página de contas */
-.contas-container {
-    max-width: 100%;
-}
+<!-- CSS específico para contas -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/contas.css') }}">
 
-/* Campos de formulário modernos */
-.form-control-modern, .form-select-modern {
-    padding: 0.75rem 1rem;
-    border: 2px solid var(--border-color);
-    border-radius: var(--border-radius-sm);
-    background: var(--bg-secondary);
-    transition: var(--transition);
-}
-
-.form-control-modern:focus, .form-select-modern:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-}
-
-/* Header gradiente */
-.bg-gradient {
-    background: var(--gradient-primary) !important;
-}
-
-/* Cards de resumo */
-.resumo-card {
-    transition: var(--transition);
-    cursor: pointer;
-}
-
-.resumo-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-lg);
-}
-
-.corrente-card:hover {
-    border-left: 4px solid var(--primary-color);
-}
-
-.investimento-card:hover {
-    border-left: 4px solid var(--success-color);
-}
-
-.total-card:hover {
-    border-left: 4px solid var(--warning-color);
-}
-
-/* Lista de contas */
-.contas-list {
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-.conta-item {
-    padding: 0.75rem 0;
-    transition: var(--transition);
-}
-
-.conta-item:hover {
-    background: var(--bg-light);
-    border-radius: var(--border-radius-sm);
-    padding: 0.75rem;
-    margin: 0 -0.75rem;
-}
-
-.conta-nome {
-    color: var(--text-primary);
-    margin-bottom: 0.25rem;
-}
-
-.conta-saldo {
-    font-size: 1.1rem;
-}
-
-.conta-actions .btn {
-    opacity: 0.7;
-    transition: var(--transition);
-}
-
-.conta-item:hover .conta-actions .btn {
-    opacity: 1;
-}
-
-/* Tabela moderna */
-.table-row-hover {
-    transition: var(--transition);
-}
-
-.table-row-hover:hover {
-    background: var(--bg-light) !important;
-    transform: scale(1.01);
-}
-
-/* Estado vazio */
-.empty-state {
-    padding: 2rem;
-}
-
-/* Responsividade */
-@media (max-width: 768px) {
-    .resumo-card {
-        margin-bottom: 1rem;
-    }
-    
-    .conta-item {
-        padding: 1rem 0;
-    }
-    
-    .conta-item:hover {
-        margin: 0;
-        padding: 1rem;
-    }
-    
-    .conta-logo {
-        margin-right: 1rem !important;
-    }
-    
-    .d-flex.align-items-center {
-        flex-wrap: wrap;
-    }
-    
-    .conta-actions {
-        margin-top: 0.5rem;
-        margin-left: 0 !important;
-        width: 100%;
-    }
-}
-
-@media (max-width: 576px) {
-    .card-body {
-        padding: 1.5rem;
-    }
-    
-    .empty-state {
-        padding: 1rem;
-    }
-    
-    .resumo-card .card-body {
-        padding: 2rem 1rem;
-    }
-}
-
-/* Animações customizadas */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.fade-in-up {
-    animation: fadeInUp 0.6s ease-out forwards;
-}
-
-/* Scrollbar personalizada para lista de contas */
-.contas-list::-webkit-scrollbar {
-    width: 4px;
-}
-
-.contas-list::-webkit-scrollbar-track {
-    background: var(--bg-light);
-    border-radius: 2px;
-}
-
-.contas-list::-webkit-scrollbar-thumb {
-    background: var(--primary-color);
-    border-radius: 2px;
-}
-
-.contas-list::-webkit-scrollbar-thumb:hover {
-    background: var(--primary-dark);
-}
-</style>
-{% endblock %}
+<!-- JavaScript específico para contas -->
+<script src="{{ url_for('static', filename='js/contas.js') }}"></script>
 {% endblock %}
