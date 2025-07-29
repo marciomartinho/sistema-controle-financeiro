@@ -130,6 +130,10 @@
                                     <span class="badge bg-warning">Parcelada</span>
                                 {% elif lancamento.recorrencia.tipo == 'Anual' %}
                                     <span class="badge bg-info">Anual</span>
+                                {% elif lancamento.recorrencia.tipo == 'Semanal' %}
+                                    <span class="badge bg-success">Semanal</span>
+                                {% elif lancamento.recorrencia.tipo == 'Quinzenal' %}
+                                    <span class="badge bg-secondary">Quinzenal</span>
                                 {% else %}
                                     <span class="badge bg-secondary">{{ lancamento.recorrencia.tipo }}</span>
                                 {% endif %}

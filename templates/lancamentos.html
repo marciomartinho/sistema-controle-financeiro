@@ -77,6 +77,14 @@
                             <label class="form-check-label" for="recorrencia_nao">Única Vez</label>
                         </div>
                         <div class="form-check">
+                            <input class="form-check-input" type="radio" name="recorrencia_tipo" id="recorrencia_semanal" value="semanal">
+                            <label class="form-check-label" for="recorrencia_semanal">Semanal</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="recorrencia_tipo" id="recorrencia_quinzenal" value="quinzenal">
+                            <label class="form-check-label" for="recorrencia_quinzenal">Quinzenal</label>
+                        </div>
+                        <div class="form-check">
                             <input class="form-check-input" type="radio" name="recorrencia_tipo" id="recorrencia_fixa" value="fixa">
                             <label class="form-check-label" for="recorrencia_fixa">Fixa Mensal</label>
                         </div>
@@ -161,6 +169,14 @@
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="recorrencia_tipo_cartao" id="recorrencia_nao_cartao" value="unica" checked>
                             <label class="form-check-label" for="recorrencia_nao_cartao">Única Vez</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="recorrencia_tipo_cartao" id="recorrencia_semanal_cartao" value="semanal">
+                            <label class="form-check-label" for="recorrencia_semanal_cartao">Semanal</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="recorrencia_tipo_cartao" id="recorrencia_quinzenal_cartao" value="quinzenal">
+                            <label class="form-check-label" for="recorrencia_quinzenal_cartao">Quinzenal</label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="recorrencia_tipo_cartao" id="recorrencia_fixa_cartao" value="fixa">
@@ -321,6 +337,10 @@
                         <span class="badge text-bg-warning">{{ recorrencia.tipo }} (em {{ recorrencia.total_parcelas }}x)</span>
                     {% elif recorrencia.tipo == 'Anual' %}
                         <span class="badge text-bg-info">{{ recorrencia.tipo }} ({{ recorrencia.total_parcelas }} anos)</span>
+                    {% elif recorrencia.tipo == 'Semanal' %}
+                        <span class="badge text-bg-success">{{ recorrencia.tipo }} ({{ recorrencia.total_parcelas }} semanas)</span>
+                    {% elif recorrencia.tipo == 'Quinzenal' %}
+                        <span class="badge text-bg-secondary">{{ recorrencia.tipo }} ({{ recorrencia.total_parcelas }} quinzenas)</span>
                     {% else %}
                         <span class="badge text-bg-info">{{ recorrencia.tipo }}</span>
                     {% endif %}

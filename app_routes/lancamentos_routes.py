@@ -89,6 +89,32 @@ def gerenciar_lancamentos():
                     db.session.add(lancamento_anual)
                 flash(f'Lançamento anual criado para os próximos {total_anos} anos!', 'success')
 
+            elif recorrencia_tipo == 'semanal':
+                frequencia = 'Semanal'
+                total_semanas = 52  # 1 ano de lançamentos semanais
+                nova_recorrencia = Recorrencia(descricao_base=descricao, tipo='Semanal', total_parcelas=total_semanas, frequencia=frequencia)
+                db.session.add(nova_recorrencia)
+                db.session.flush()
+
+                for i in range(total_semanas):
+                    vencimento_semanal = data_vencimento + relativedelta(weeks=i)
+                    lancamento_semanal = Lancamento(descricao=descricao, valor=float(valor_total), tipo=tipo_lancamento, data_vencimento=vencimento_semanal, subcategoria_id=subcategoria_id, conta_id=conta_id, recorrencia_id=nova_recorrencia.id)
+                    db.session.add(lancamento_semanal)
+                flash(f'Lançamento semanal criado para as próximas {total_semanas} semanas!', 'success')
+
+            elif recorrencia_tipo == 'quinzenal':
+                frequencia = 'Quinzenal'
+                total_quinzenas = 26  # 1 ano de lançamentos quinzenais
+                nova_recorrencia = Recorrencia(descricao_base=descricao, tipo='Quinzenal', total_parcelas=total_quinzenas, frequencia=frequencia)
+                db.session.add(nova_recorrencia)
+                db.session.flush()
+
+                for i in range(total_quinzenas):
+                    vencimento_quinzenal = data_vencimento + relativedelta(days=i*15)
+                    lancamento_quinzenal = Lancamento(descricao=descricao, valor=float(valor_total), tipo=tipo_lancamento, data_vencimento=vencimento_quinzenal, subcategoria_id=subcategoria_id, conta_id=conta_id, recorrencia_id=nova_recorrencia.id)
+                    db.session.add(lancamento_quinzenal)
+                flash(f'Lançamento quinzenal criado para as próximas {total_quinzenas} quinzenas!', 'success')
+
         elif tipo_lancamento == 'CartaoCredito':
             # Lógica para Cartão de Crédito
             descricao = request.form.get('descricao')
@@ -225,6 +251,52 @@ def gerenciar_lancamentos():
                     )
                     db.session.add(lancamento_anual)
                 flash(f'Lançamento anual no cartão criado para os próximos {total_anos} anos!', 'success')
+
+            elif recorrencia_tipo == 'semanal':
+                frequencia = 'Semanal'
+                total_semanas = 52  # 1 ano de lançamentos semanais
+                nova_recorrencia = Recorrencia(descricao_base=descricao, tipo='Semanal', total_parcelas=total_semanas, frequencia=frequencia)
+                db.session.add(nova_recorrencia)
+                db.session.flush()
+
+                for i in range(total_semanas):
+                    # Calcular vencimento semanal baseado na fatura de início
+                    vencimento_semanal = data_vencimento_fatura + relativedelta(weeks=i)
+                    lancamento_semanal = Lancamento(
+                        descricao=descricao, 
+                        valor=float(valor_total), 
+                        tipo='Despesa', 
+                        data_vencimento=vencimento_semanal, 
+                        subcategoria_id=subcategoria_id, 
+                        cartao_credito_id=cartao_credito_id,
+                        conta_id=None,
+                        recorrencia_id=nova_recorrencia.id
+                    )
+                    db.session.add(lancamento_semanal)
+                flash(f'Lançamento semanal no cartão criado para as próximas {total_semanas} semanas!', 'success')
+
+            elif recorrencia_tipo == 'quinzenal':
+                frequencia = 'Quinzenal'
+                total_quinzenas = 26  # 1 ano de lançamentos quinzenais
+                nova_recorrencia = Recorrencia(descricao_base=descricao, tipo='Quinzenal', total_parcelas=total_quinzenas, frequencia=frequencia)
+                db.session.add(nova_recorrencia)
+                db.session.flush()
+
+                for i in range(total_quinzenas):
+                    # Calcular vencimento quinzenal baseado na fatura de início
+                    vencimento_quinzenal = data_vencimento_fatura + relativedelta(days=i*15)
+                    lancamento_quinzenal = Lancamento(
+                        descricao=descricao, 
+                        valor=float(valor_total), 
+                        tipo='Despesa', 
+                        data_vencimento=vencimento_quinzenal, 
+                        subcategoria_id=subcategoria_id, 
+                        cartao_credito_id=cartao_credito_id,
+                        conta_id=None,
+                        recorrencia_id=nova_recorrencia.id
+                    )
+                    db.session.add(lancamento_quinzenal)
+                flash(f'Lançamento quinzenal no cartão criado para as próximas {total_quinzenas} quinzenas!', 'success')
         
         elif tipo_lancamento == 'Transferencia':
             descricao = request.form.get('descricao')
@@ -272,9 +344,13 @@ def gerenciar_lancamentos():
         return redirect(url_for('lancamentos_bp.gerenciar_lancamentos'))
 
     # Buscar dados para renderizar a página
-    lancamentos_unicos = Lancamento.query.filter(Lancamento.recorrencia_id == None, Lancamento.transferencia_grupo_id == None).order_by(Lancamento.id.desc()).all()
-    recorrencias = Recorrencia.query.order_by(Recorrencia.id.desc()).all()
-    transferencias = TransferenciaGrupo.query.order_by(TransferenciaGrupo.id.desc()).all()
+    lancamentos_unicos = Lancamento.query.filter(
+        Lancamento.recorrencia_id == None, 
+        Lancamento.transferencia_grupo_id == None
+    ).order_by(Lancamento.data_criacao.desc(), Lancamento.id.desc()).all()
+    
+    recorrencias = Recorrencia.query.order_by(Recorrencia.data_criacao.desc(), Recorrencia.id.desc()).all()
+    transferencias = TransferenciaGrupo.query.order_by(TransferenciaGrupo.data_criacao.desc(), TransferenciaGrupo.id.desc()).all()
     
     contas = Conta.query.order_by(Conta.nome).all()
     categorias = Categoria.query.order_by(Categoria.nome).all()

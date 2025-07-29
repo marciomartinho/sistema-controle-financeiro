@@ -60,7 +60,7 @@ class CartaoCredito(db.Model):
     conta_pagamento_id = db.Column(db.Integer, db.ForeignKey('contas.id'), nullable=True)  # Conta para debitar o pagamento
     logo_imagem = db.Column(db.String(100), nullable=True)
     ativo = db.Column(db.Boolean, nullable=False, default=True)
-    data_criacao = db.Column(db.Date, nullable=False, server_default=func.now())
+    data_criacao = db.Column(db.Date, nullable=False, default=date.today)
     
     conta_pagamento = db.relationship('Conta', backref=db.backref('cartoes_credito', lazy=True))
 
@@ -84,13 +84,13 @@ class Recorrencia(db.Model):
     tipo = db.Column(db.String(20), nullable=False) 
     total_parcelas = db.Column(db.Integer, nullable=True)
     frequencia = db.Column(db.String(20), nullable=False, default='Mensal')
-    data_criacao = db.Column(db.Date, nullable=False, server_default=func.now())
+    data_criacao = db.Column(db.Date, nullable=False, default=date.today)
     lancamentos = db.relationship('Lancamento', backref='recorrencia', lazy=True, cascade="all, delete-orphan")
 
 class TransferenciaGrupo(db.Model):
     __tablename__ = 'transferencia_grupos'
     id = db.Column(db.Integer, primary_key=True)
-    data_criacao = db.Column(db.Date, nullable=False, server_default=func.now())
+    data_criacao = db.Column(db.Date, nullable=False, default=date.today)
 
 class Lancamento(db.Model):
     __tablename__ = 'lancamentos'

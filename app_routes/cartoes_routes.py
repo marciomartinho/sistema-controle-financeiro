@@ -258,9 +258,12 @@ def editar_lancamento_cartao():
                 
                 # Atualizar descrição considerando se é parcelada
                 if recorrencia.tipo == 'Parcelada':
-                    partes = lancamento.descricao.split('(')
-                    if len(partes) > 1:
-                        lancamento.descricao = f"{nova_descricao} ({partes[1]}"
+                    # Limpar descrição atual e recriar corretamente
+                    descricao_base = nova_descricao
+                    # Encontrar o número da parcela atual na sequência
+                    parcelas_ordenadas = sorted([l for l in recorrencia.lancamentos], key=lambda x: x.data_vencimento)
+                    indice_parcela = parcelas_ordenadas.index(lancamento) + 1
+                    lancamento.descricao = f"{descricao_base} ({indice_parcela}/{recorrencia.total_parcelas})"
                 else:
                     lancamento.descricao = nova_descricao
             
