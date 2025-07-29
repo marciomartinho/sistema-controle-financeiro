@@ -30,7 +30,7 @@
                         <i class="bi bi-calendar-month text-primary"></i>
                         Mês
                     </label>
-                    <select name="mes" id="mes" class="form-select" onchange="this.form.submit()">
+                    <select name="mes" id="mes" class="form-select">
                         {% for mes in meses_disponiveis %}
                             <option value="{{ mes.id }}" {% if mes.id == mes_selecionado %}selected{% endif %}>
                                 {{ mes.nome }}
@@ -43,7 +43,7 @@
                         <i class="bi bi-calendar-year text-primary"></i>
                         Ano
                     </label>
-                    <select name="ano" id="ano" class="form-select" onchange="this.form.submit()">
+                    <select name="ano" id="ano" class="form-select">
                         {% for ano in anos_disponiveis %}
                             <option value="{{ ano }}" {% if ano == ano_selecionado %}selected{% endif %}>
                                 {{ ano }}
@@ -158,14 +158,14 @@
                                 <tr>
                                     <th class="border-0">Data</th>
                                     <th class="border-0">Descrição</th>
-                                    <th class="border-0">Conta</th>
+                                    <th class="border-0 d-md-table-cell">Conta</th>
                                     <th class="border-0">Valor</th>
                                     <th class="border-0 text-center">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for receita in receitas %}
-                                    <tr class="{% if receita.status == 'Pago' %}table-success bg-opacity-25{% endif %}">
+                                    <tr class="{% if receita.status == 'Pago' %}table-success bg-opacity-25{% endif %} receita-item">
                                         <td>
                                             <div class="d-flex flex-column">
                                                 <span class="fw-medium">{{ receita.data_vencimento.strftime('%d/%m') }}</span>
@@ -190,7 +190,7 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td class="d-md-table-cell">
                                             <small class="text-muted">{{ receita.conta.nome }}</small>
                                         </td>
                                         <td>
@@ -299,7 +299,7 @@
                                 <tr>
                                     <th class="border-0">Data</th>
                                     <th class="border-0">Descrição</th>
-                                    <th class="border-0">Conta</th>
+                                    <th class="border-0 d-md-table-cell">Conta</th>
                                     <th class="border-0">Valor</th>
                                     <th class="border-0 text-center">Ações</th>
                                 </tr>
@@ -309,7 +309,7 @@
                                 {% set despesas_ordenadas = todas_despesas|sort(attribute='data_vencimento') %}
                                 
                                 {% for item in despesas_ordenadas %}
-                                    <tr class="{% if item.status == 'Pago' %}table-success bg-opacity-25{% endif %}">
+                                    <tr class="{% if item.status == 'Pago' %}table-success bg-opacity-25{% endif %} despesa-item">
                                         <td>
                                             <div class="d-flex flex-column">
                                                 <span class="fw-medium">{{ item.data_vencimento.strftime('%d/%m') }}</span>
@@ -344,7 +344,7 @@
                                                 {% endif %}
                                             </div>
                                         </td>
-                                        <td>
+                                        <td class="d-md-table-cell">
                                             <small class="text-muted">
                                                 {% if item.tipo == 'CartaoCredito' %}
                                                     {% if item.cartao.conta_pagamento %}
@@ -477,7 +477,7 @@
     <!-- Resumo Financeiro Modernizado -->
     <div class="row">
         <div class="col-12">
-            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card border-0 shadow-sm resumo-financeiro">
                 <div class="card-body text-white">
                     <h5 class="card-title text-center mb-4 d-flex align-items-center justify-content-center">
                         <div class="icon-container bg-white text-primary me-2">
@@ -523,7 +523,7 @@
     </div>
 </div>
 
-<!-- Modais (mantidos os mesmos do original) -->
+<!-- Modais -->
 <!-- Modal para Editar Lançamento Único -->
 <div class="modal fade" id="modalEditarUnico" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -782,193 +782,12 @@
         </div>
     </div>
 </div>
-
-<!-- Scripts mantidos os mesmos do original -->
-<script>
-// Script para gerenciar os modais do dashboard
-document.addEventListener('DOMContentLoaded', function() {
-    // Modal Editar Único
-    const modalEditarUnico = document.getElementById('modalEditarUnico');
-    if (modalEditarUnico) {
-        modalEditarUnico.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            
-            document.getElementById('edit_unico_lancamento_id').value = button.getAttribute('data-lancamento-id');
-            document.getElementById('edit_unico_descricao').value = button.getAttribute('data-descricao');
-            document.getElementById('edit_unico_valor').value = button.getAttribute('data-valor');
-            document.getElementById('edit_unico_data').value = button.getAttribute('data-vencimento');
-            document.getElementById('edit_unico_categoria').value = button.getAttribute('data-categoria-id');
-            
-            // Verificar se é conta ou cartão
-            const contaId = button.getAttribute('data-conta-id');
-            const cartaoId = button.getAttribute('data-cartao-id');
-            
-            if (cartaoId && cartaoId !== '') {
-                // É cartão
-                document.getElementById('edit_unico_conta_field').style.display = 'none';
-                document.getElementById('edit_unico_cartao_field').style.display = 'block';
-                document.getElementById('edit_unico_cartao').value = cartaoId;
-            } else {
-                // É conta
-                document.getElementById('edit_unico_conta_field').style.display = 'block';
-                document.getElementById('edit_unico_cartao_field').style.display = 'none';
-                document.getElementById('edit_unico_conta').value = contaId;
-            }
-            
-            // Carregar subcategorias
-            const categoriaId = button.getAttribute('data-categoria-id');
-            const subcategoriaId = button.getAttribute('data-subcategoria-id');
-            if (categoriaId) {
-                carregarSubcategorias('edit_unico_categoria', 'edit_unico_subcategoria', subcategoriaId);
-            }
-        });
-    }
-    
-    // Modal Excluir Único
-    const modalExcluirUnico = document.getElementById('modalExcluirUnico');
-    if (modalExcluirUnico) {
-        modalExcluirUnico.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            
-            document.getElementById('del_unico_lancamento_id').value = button.getAttribute('data-lancamento-id');
-            document.getElementById('del_unico_descricao').textContent = button.getAttribute('data-descricao');
-        });
-    }
-    
-    // Modal Editar Recorrência
-    const modalEditarRecorrencia = document.getElementById('modalEditarRecorrencia');
-    if (modalEditarRecorrencia) {
-        modalEditarRecorrencia.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            
-            document.getElementById('edit_rec_lancamento_id').value = button.getAttribute('data-lancamento-id');
-            document.getElementById('edit_rec_recorrencia_id').value = button.getAttribute('data-recorrencia-id');
-            document.getElementById('edit_rec_descricao').value = button.getAttribute('data-descricao');
-            document.getElementById('edit_rec_valor').value = button.getAttribute('data-valor');
-            document.getElementById('edit_rec_data').value = button.getAttribute('data-vencimento');
-            document.getElementById('edit_rec_categoria').value = button.getAttribute('data-categoria-id');
-            
-            // Verificar se é conta ou cartão
-            const contaId = button.getAttribute('data-conta-id');
-            const cartaoId = button.getAttribute('data-cartao-id');
-            
-            if (cartaoId && cartaoId !== '') {
-                // É cartão
-                document.getElementById('edit_rec_conta_field').style.display = 'none';
-                document.getElementById('edit_rec_cartao_field').style.display = 'block';
-                document.getElementById('edit_rec_cartao').value = cartaoId;
-            } else {
-                // É conta
-                document.getElementById('edit_rec_conta_field').style.display = 'block';
-                document.getElementById('edit_rec_cartao_field').style.display = 'none';
-                document.getElementById('edit_rec_conta').value = contaId;
-            }
-            
-            // Carregar subcategorias
-            const categoriaId = button.getAttribute('data-categoria-id');
-            const subcategoriaId = button.getAttribute('data-subcategoria-id');
-            if (categoriaId) {
-                carregarSubcategorias('edit_rec_categoria', 'edit_rec_subcategoria', subcategoriaId);
-            }
-        });
-    }
-    
-    // Modal Excluir Recorrência
-    const modalExcluirRecorrencia = document.getElementById('modalExcluirRecorrencia');
-    if (modalExcluirRecorrencia) {
-        modalExcluirRecorrencia.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            
-            document.getElementById('del_rec_lancamento_id').value = button.getAttribute('data-lancamento-id');
-            document.getElementById('del_rec_recorrencia_id').value = button.getAttribute('data-recorrencia-id');
-            document.getElementById('del_rec_descricao').textContent = button.getAttribute('data-descricao');
-            document.getElementById('del_rec_vencimento').textContent = button.getAttribute('data-vencimento');
-        });
-    }
-});
-
-// Função para carregar subcategorias
-function carregarSubcategorias(categoriaSelectId, subcategoriaSelectId, subcategoriaSelecionada = null) {
-    const categoriaSelect = document.getElementById(categoriaSelectId);
-    const subcategoriaSelect = document.getElementById(subcategoriaSelectId);
-    const categoriaId = categoriaSelect.value;
-    
-    subcategoriaSelect.innerHTML = '<option value="">Carregando...</option>';
-    subcategoriaSelect.disabled = true;
-    
-    if (categoriaId) {
-        fetch(`/api/subcategorias/${categoriaId}`)
-            .then(response => response.json())
-            .then(data => {
-                subcategoriaSelect.innerHTML = '<option value="">Selecione...</option>';
-                data.forEach(sub => {
-                    const option = document.createElement('option');
-                    option.value = sub.id;
-                    option.textContent = sub.nome;
-                    if (subcategoriaSelecionada && sub.id == subcategoriaSelecionada) {
-                        option.selected = true;
-                    }
-                    subcategoriaSelect.appendChild(option);
-                });
-                subcategoriaSelect.disabled = false;
-            })
-            .catch(error => {
-                console.error('Erro ao carregar subcategorias:', error);
-                subcategoriaSelect.innerHTML = '<option value="">Erro ao carregar</option>';
-            });
-    } else {
-        subcategoriaSelect.innerHTML = '<option value="">Selecione uma categoria primeiro</option>';
-    }
-}
-
-// Event listeners para mudança de categoria
-document.getElementById('edit_unico_categoria')?.addEventListener('change', function() {
-    carregarSubcategorias('edit_unico_categoria', 'edit_unico_subcategoria');
-});
-
-document.getElementById('edit_rec_categoria')?.addEventListener('change', function() {
-    carregarSubcategorias('edit_rec_categoria', 'edit_rec_subcategoria');
-});
-
-// Adicionar animações aos cards de conta
-document.addEventListener('DOMContentLoaded', function() {
-    const contaCards = document.querySelectorAll('.conta-card');
-    contaCards.forEach((card, index) => {
-        card.style.animationDelay = `${index * 0.1}s`;
-        card.classList.add('fade-in');
-    });
-});
-</script>
+{% endblock %}
 
 {% block scripts %}
-<style>
-.conta-card {
-    transition: var(--transition);
-}
+<!-- CSS específico para dashboard -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 
-.conta-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-lg);
-}
-
-.dashboard-container {
-    max-width: 100%;
-}
-
-@media (max-width: 768px) {
-    .btn-group-sm .btn {
-        padding: 0.25rem 0.4rem;
-        font-size: 0.7rem;
-    }
-    
-    .table-responsive {
-        border-radius: var(--border-radius-sm);
-    }
-}
-
-.text-purple {
-    color: #6f42c1 !important;
-}
-</style>
-{% endblock %}
+<!-- JavaScript específico para dashboard -->
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}

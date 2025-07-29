@@ -421,7 +421,7 @@
                             {% set saida = (transferencia.lancamentos|selectattr('tipo', 'equalto', 'Despesa')|first) %}
                             {% set entrada = (transferencia.lancamentos|selectattr('tipo', 'equalto', 'Receita')|first) %}
                             {% if saida and entrada %}
-                            <tr class="table-row-hover">
+                            <tr class="table-row-hover lancamento-transferencia">
                                 <td class="ps-4">
                                     <div class="d-flex flex-column">
                                         <span class="fw-medium">{{ transferencia.data_criacao.strftime('%d/%m/%Y') }}</span>
@@ -430,7 +430,7 @@
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        <div class="icon-container bg-info bg-opacity-10 text-info me-2" style="width: 32px; height: 32px;">
+                                        <div class="icon-container bg-info bg-opacity-10 text-info me-2">
                                             <i class="bi bi-arrow-left-right"></i>
                                         </div>
                                         <div>
@@ -456,11 +456,14 @@
                                     <span class="fw-bold">{{ saida.valor | currency }}</span>
                                 </td>
                                 <td>
-                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">Único</span>
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                        <i class="bi bi-1-circle me-1"></i>
+                                        Único
+                                    </span>
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-secondary btn-sm" disabled>
+                                        <button class="btn btn-outline-secondary btn-sm" disabled title="Transferências não podem ser editadas">
                                             <i class="bi bi-pencil"></i>
                                         </button>
                                         <button type="button" class="btn btn-outline-danger btn-sm" 
@@ -482,7 +485,7 @@
                         {% for recorrencia in recorrencias %}
                             {% set primeiro_lancamento = recorrencia.lancamentos|sort(attribute='data_vencimento')|first %}
                             {% if primeiro_lancamento %}
-                            <tr class="table-row-hover">
+                            <tr class="table-row-hover lancamento-{{ primeiro_lancamento.tipo.lower() }}">
                                 <td class="ps-4">
                                     <div class="d-flex flex-column">
                                         <span class="fw-medium">{{ recorrencia.data_criacao.strftime('%d/%m/%Y') if recorrencia.data_criacao }}</span>
@@ -492,11 +495,11 @@
                                 <td>
                                     <div class="d-flex align-items-center">
                                         {% if primeiro_lancamento.cartao_credito_id %}
-                                            <div class="icon-container bg-purple bg-opacity-10 text-purple me-2" style="width: 32px; height: 32px;">
+                                            <div class="icon-container bg-purple bg-opacity-10 text-purple me-2">
                                                 <i class="bi bi-credit-card-fill"></i>
                                             </div>
                                         {% else %}
-                                            <div class="icon-container me-2" style="width: 32px; height: 32px; background-color: {{ primeiro_lancamento.subcategoria.categoria.cor }}15; color: {{ primeiro_lancamento.subcategoria.categoria.cor }};">
+                                            <div class="icon-container me-2" style="background-color: {{ primeiro_lancamento.subcategoria.categoria.cor }}15; color: {{ primeiro_lancamento.subcategoria.categoria.cor }};">
                                                 <i class="{{ primeiro_lancamento.subcategoria.categoria.icone }}"></i>
                                             </div>
                                         {% endif %}
@@ -601,7 +604,7 @@
 
                         <!-- Lançamentos Únicos -->
                         {% for lancamento in lancamentos_unicos %}
-                        <tr class="table-row-hover">
+                        <tr class="table-row-hover lancamento-{{ lancamento.tipo.lower() }}">
                             <td class="ps-4">
                                 <div class="d-flex flex-column">
                                     <span class="fw-medium">{{ lancamento.data_criacao.strftime('%d/%m/%Y') if lancamento.data_criacao }}</span>
@@ -611,11 +614,11 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     {% if lancamento.cartao_credito_id %}
-                                        <div class="icon-container bg-purple bg-opacity-10 text-purple me-2" style="width: 32px; height: 32px;">
+                                        <div class="icon-container bg-purple bg-opacity-10 text-purple me-2">
                                             <i class="bi bi-credit-card-fill"></i>
                                         </div>
                                     {% else %}
-                                        <div class="icon-container me-2" style="width: 32px; height: 32px; background-color: {{ lancamento.subcategoria.categoria.cor }}15; color: {{ lancamento.subcategoria.categoria.cor }};">
+                                        <div class="icon-container me-2" style="background-color: {{ lancamento.subcategoria.categoria.cor }}15; color: {{ lancamento.subcategoria.categoria.cor }};">
                                             <i class="{{ lancamento.subcategoria.categoria.icone }}"></i>
                                         </div>
                                     {% endif %}
@@ -694,7 +697,7 @@
                         {% if not lancamentos_unicos and not recorrencias and not transferencias %}
                         <tr>
                             <td colspan="7" class="text-center py-5">
-                                <div class="text-muted">
+                                <div class="empty-state">
                                     <i class="bi bi-inbox fs-1 d-block mb-3"></i>
                                     <h5>Nenhum lançamento encontrado</h5>
                                     <p class="mb-0">Crie seu primeiro lançamento usando o formulário acima.</p>
@@ -709,7 +712,7 @@
     </div>
 </div>
 
-<!-- Modais (mantidos os mesmos do original com estilos aplicados) -->
+<!-- Modais -->
 <!-- Modal para excluir lançamentos únicos e recorrências -->
 <div class="modal fade" id="modalExcluir" tabindex="-1">
     <div class="modal-dialog">
@@ -762,10 +765,10 @@
                         <strong>Para:</strong> <span id="contaDestinoModal"></span><br>
                         <strong>Valor:</strong> <span id="valorModal"></span>
                     </div>
-                    <p class="text-warning">
+                    <div class="alert alert-warning border-0">
                         <i class="bi bi-exclamation-circle me-1"></i>
                         Esta ação reverterá os valores para as contas originais e não pode ser desfeita.
-                    </p>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -778,190 +781,12 @@
         </div>
     </div>
 </div>
-
-<!-- Incluir arquivo JavaScript separado -->
-<script src="{{ url_for('static', filename='js/lancamentos.js') }}"></script>
+{% endblock %}
 
 {% block scripts %}
-<style>
-/* Estilos específicos para a página de lançamentos */
-.lancamentos-container {
-    max-width: 100%;
-}
+<!-- CSS específico para lançamentos -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/lancamentos.css') }}">
 
-/* Cards de tipo de lançamento */
-.form-check-card {
-    position: relative;
-    margin: 0;
-}
-
-.form-check-card .form-check-input {
-    position: absolute;
-    opacity: 0;
-    z-index: -1;
-}
-
-.check-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 1.5rem 1rem;
-    border: 2px solid var(--border-color);
-    border-radius: var(--border-radius);
-    background: var(--bg-secondary);
-    transition: var(--transition);
-    cursor: pointer;
-    text-align: center;
-    min-height: 120px;
-}
-
-.check-card:hover {
-    border-color: var(--primary-color);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-}
-
-.form-check-input:checked + .form-check-label .check-card {
-    border-color: var(--primary-color);
-    background: rgba(99, 102, 241, 0.05);
-    box-shadow: var(--shadow-md);
-}
-
-.tipo-lancamento-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-}
-
-/* Campos de formulário modernos */
-.form-control-modern, .form-select-modern {
-    padding: 0.75rem 1rem;
-    border: 2px solid var(--border-color);
-    border-radius: var(--border-radius-sm);
-    background: var(--bg-secondary);
-    transition: var(--transition);
-}
-
-.form-control-modern:focus, .form-select-modern:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-}
-
-/* Seções de campos */
-.campos-section {
-    background: var(--bg-light);
-    border-radius: var(--border-radius);
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-.section-header {
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--border-color);
-}
-
-/* Opções de recorrência */
-.recorrencia-options {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.recorrencia-option {
-    margin: 0 !important;
-}
-
-.recorrencia-option .form-check-label {
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--border-color);
-    border-radius: 50px;
-    background: var(--bg-secondary);
-    transition: var(--transition);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    font-size: 0.875rem;
-}
-
-.recorrencia-option .form-check-label:hover {
-    border-color: var(--primary-color);
-    background: rgba(99, 102, 241, 0.05);
-}
-
-.recorrencia-option .form-check-input:checked + .form-check-label {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
-
-/* Tabela moderna */
-.table-row-hover {
-    transition: var(--transition);
-}
-
-.table-row-hover:hover {
-    background: var(--bg-light) !important;
-    transform: scale(1.01);
-}
-
-/* Fluxo de transferência */
-.transfer-flow {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-}
-
-/* Header gradiente */
-.bg-gradient {
-    background: var(--gradient-primary) !important;
-}
-
-/* Cor roxa para cartões */
-.text-purple {
-    color: #6f42c1 !important;
-}
-
-.bg-purple {
-    background-color: #6f42c1 !important;
-}
-
-/* Responsividade */
-@media (max-width: 768px) {
-    .tipo-lancamento-container {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .check-card {
-        min-height: 100px;
-        padding: 1rem 0.5rem;
-    }
-    
-    .campos-section {
-        padding: 1rem;
-    }
-    
-    .recorrencia-options {
-        justify-content: center;
-    }
-    
-    .recorrencia-option .form-check-label {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.8rem;
-    }
-}
-
-@media (max-width: 576px) {
-    .tipo-lancamento-container {
-        grid-template-columns: 1fr;
-    }
-    
-    .transfer-flow {
-        flex-direction: column;
-        gap: 0.5rem;
-        align-items: flex-start;
-    }
-}
-</style>
-{% endblock %}
+<!-- JavaScript específico para lançamentos -->
+<script src="{{ url_for('static', filename='js/lancamentos.js') }}"></script>
 {% endblock %}
