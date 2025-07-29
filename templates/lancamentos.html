@@ -4,7 +4,6 @@
 
 {% block content %}
 <div class="lancamentos-container">
-    <!-- Header da Página -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="h2 mb-0 text-primary fw-bold">
@@ -21,7 +20,6 @@
         </div>
     </div>
 
-    <!-- Formulário de Novo Lançamento -->
     <div class="card shadow-sm mb-5 border-0">
         <div class="card-header bg-gradient text-white">
             <h3 class="h5 mb-0 d-flex align-items-center">
@@ -33,7 +31,6 @@
         </div>
         <div class="card-body p-4">
             <form id="form-lancamento" action="{{ url_for('lancamentos_bp.gerenciar_lancamentos') }}" method="POST">
-                <!-- Seletor de Tipo de Lançamento -->
                 <div class="row mb-4">
                     <div class="col-12">
                         <label class="form-label fw-semibold mb-3">
@@ -85,7 +82,6 @@
                     </div>
                 </div>
                 
-                <!-- Campos Básicos -->
                 <div class="row mb-4">
                     <div class="col-md-6 mb-3">
                         <label for="descricao" class="form-label fw-semibold">
@@ -112,7 +108,6 @@
                     </div>
                 </div>
                 
-                <!-- Campos Receita/Despesa -->
                 <div id="campos_receita_despesa" class="campos-section">
                     <div class="section-header mb-3">
                         <h6 class="text-primary mb-0">
@@ -149,7 +144,6 @@
                         </div>
                     </div>
                     
-                    <!-- Recorrência -->
                     <div class="recorrencia-section mb-4">
                         <h6 class="text-primary mb-3">
                             <i class="bi bi-arrow-repeat me-1"></i>
@@ -200,7 +194,6 @@
                             </div>
                         </div>
                         
-                        <!-- Campos de Parcelamento -->
                         <div class="row mt-3" id="campos_parcelamento" style="display: none;">
                             <div class="col-md-6">
                                 <label for="num_parcelas" class="form-label fw-semibold">Número de Parcelas</label>
@@ -219,7 +212,6 @@
                     </div>
                 </div>
 
-                <!-- Campos Cartão de Crédito -->
                 <div id="campos_cartao_credito" class="campos-section" style="display: none;">
                     <div class="section-header mb-3">
                         <h6 class="text-primary mb-0">
@@ -273,7 +265,6 @@
                         </div>
                     </div>
                     
-                    <!-- Recorrência para Cartão -->
                     <div class="recorrencia-section mb-4">
                         <h6 class="text-primary mb-3">
                             <i class="bi bi-arrow-repeat me-1"></i>
@@ -324,7 +315,6 @@
                             </div>
                         </div>
                         
-                        <!-- Campos de Parcelamento Cartão -->
                         <div class="row mt-3" id="campos_parcelamento_cartao" style="display: none;">
                             <div class="col-md-6">
                                 <label for="num_parcelas_cartao" class="form-label fw-semibold">Número de Parcelas</label>
@@ -343,7 +333,6 @@
                     </div>
                 </div>
 
-                <!-- Campos Transferência -->
                 <div id="campos_transferencia" class="campos-section" style="display: none;">
                     <div class="section-header mb-3">
                         <h6 class="text-primary mb-0">
@@ -379,7 +368,6 @@
                     </div>
                 </div>
 
-                <!-- Botão de Submissão -->
                 <div class="d-flex justify-content-end pt-3 border-top">
                     <button type="submit" class="btn btn-primary btn-lg">
                         <i class="bi bi-check-lg"></i>
@@ -390,7 +378,6 @@
         </div>
     </div>
 
-    <!-- Lista de Lançamentos -->
     <div class="card shadow-sm border-0">
         <div class="card-header bg-transparent border-0 pb-0">
             <h3 class="h5 mb-0 d-flex align-items-center text-primary">
@@ -416,7 +403,6 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Transferências -->
                         {% for transferencia in transferencias %}
                             {% set saida = (transferencia.lancamentos|selectattr('tipo', 'equalto', 'Despesa')|first) %}
                             {% set entrada = (transferencia.lancamentos|selectattr('tipo', 'equalto', 'Receita')|first) %}
@@ -463,9 +449,6 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-secondary btn-sm" disabled title="Transferências não podem ser editadas">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
                                         <button type="button" class="btn btn-outline-danger btn-sm" 
                                                 data-bs-toggle="modal" data-bs-target="#modalExcluirTransferencia" 
                                                 data-transferencia-id="{{ transferencia.id }}" 
@@ -481,7 +464,6 @@
                             {% endif %}
                         {% endfor %}
 
-                        <!-- Recorrências -->
                         {% for recorrencia in recorrencias %}
                             {% set primeiro_lancamento = recorrencia.lancamentos|sort(attribute='data_vencimento')|first %}
                             {% if primeiro_lancamento %}
@@ -582,10 +564,6 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group btn-group-sm">
-                                        <a href="{{ url_for('lancamentos_bp.editar_recorrencia', id=recorrencia.id) }}" 
-                                           class="btn btn-outline-primary btn-sm" title="Editar Recorrência">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
                                         <button type="button" class="btn btn-outline-danger btn-sm" 
                                                 data-bs-toggle="modal" data-bs-target="#modalExcluir" 
                                                 data-tipo-item="recorrencia" 
@@ -602,7 +580,6 @@
                             {% endif %}
                         {% endfor %}
 
-                        <!-- Lançamentos Únicos -->
                         {% for lancamento in lancamentos_unicos %}
                         <tr class="table-row-hover lancamento-{{ lancamento.tipo.lower() }}">
                             <td class="ps-4">
@@ -677,10 +654,6 @@
                             </td>
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm">
-                                    <a href="{{ url_for('lancamentos_bp.editar_lancamento_unico', id=lancamento.id) }}" 
-                                       class="btn btn-outline-primary btn-sm" title="Editar Lançamento">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
                                     <button type="button" class="btn btn-outline-danger btn-sm" 
                                             data-bs-toggle="modal" data-bs-target="#modalExcluir" 
                                             data-tipo-item="unico" 
@@ -712,8 +685,6 @@
     </div>
 </div>
 
-<!-- Modais -->
-<!-- Modal para excluir lançamentos únicos e recorrências -->
 <div class="modal fade" id="modalExcluir" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content border-0 shadow-lg">
@@ -746,7 +717,6 @@
     </div>
 </div>
 
-<!-- Modal para excluir transferência -->
 <div class="modal fade" id="modalExcluirTransferencia" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content border-0 shadow-lg">
@@ -784,9 +754,7 @@
 {% endblock %}
 
 {% block scripts %}
-<!-- CSS específico para lançamentos -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/lancamentos.css') }}">
 
-<!-- JavaScript específico para lançamentos -->
 <script src="{{ url_for('static', filename='js/lancamentos.js') }}"></script>
 {% endblock %}
