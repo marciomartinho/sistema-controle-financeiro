@@ -62,7 +62,7 @@
     </div>
 
     <!-- Cards de Saldo das Contas -->
-    <div class="row mb-5">
+    <div class="row mb-4">
         <div class="col-12">
             <h3 class="h4 mb-3 d-flex align-items-center">
                 <div class="icon-container me-2">
@@ -135,8 +135,8 @@
         {% endif %}
     </div>
 
-    <!-- Seção Principal - Receitas e Despesas -->
-    <div class="row mb-5">
+    <!-- Seção Principal - Receitas e Despesas OTIMIZADA -->
+    <div class="row mb-4">
         <!-- Receitas -->
         <div class="col-lg-6 mb-4">
             <div class="card h-100 border-0 shadow-sm">
@@ -151,61 +151,61 @@
                         <h5 class="text-success mb-0 fw-bold">{{ total_receitas_mes | currency }}</h5>
                     </div>
                 </div>
-                <div class="card-body pt-3">
+                <div class="card-body pt-3" style="max-height: 500px; overflow-y: auto;">
                     <div class="table-responsive">
-                        <table class="table table-sm table-hover align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="border-0">Data</th>
-                                    <th class="border-0">Descrição</th>
-                                    <th class="border-0 d-md-table-cell">Conta</th>
-                                    <th class="border-0">Valor</th>
-                                    <th class="border-0 text-center">Ações</th>
+                        <table class="table table-sm table-hover align-middle mb-0">
+                            <thead class="table-light sticky-top">
+                                <tr style="font-size: 0.85rem;">
+                                    <th class="border-0 text-center" style="width: 60px; padding: 8px 4px;">Data</th>
+                                    <th class="border-0" style="width: 200px; padding: 8px;">Descrição</th>
+                                    <th class="border-0 d-none d-lg-table-cell" style="width: 80px; padding: 8px 4px;">Conta</th>
+                                    <th class="border-0 text-end" style="width: 90px; padding: 8px 4px;">Valor</th>
+                                    <th class="border-0 text-center" style="width: 100px; padding: 8px 4px;">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for receita in receitas %}
-                                    <tr class="{% if receita.status == 'Pago' %}table-success bg-opacity-25{% endif %} receita-item">
-                                        <td>
+                                    <tr class="{% if receita.status == 'Pago' %}table-success bg-opacity-25{% endif %} receita-item" style="font-size: 0.9rem;">
+                                        <td class="text-center" style="width: 60px; padding: 6px 4px;">
                                             <div class="d-flex flex-column">
-                                                <span class="fw-medium">{{ receita.data_vencimento.strftime('%d/%m') }}</span>
-                                                <small class="text-muted">{{ receita.data_vencimento.strftime('%Y') }}</small>
+                                                <span class="fw-medium" style="font-size: 0.85rem;">{{ receita.data_vencimento.strftime('%d/%m') }}</span>
+                                                <small class="text-muted" style="font-size: 0.7rem;">{{ receita.data_vencimento.strftime('%Y') }}</small>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td style="width: 200px; padding: 6px 8px;">
                                             <div class="d-flex align-items-center">
                                                 {% if receita.subcategoria %}
                                                     <i class="{{ receita.subcategoria.categoria.icone }} me-2" 
-                                                       style="color: {{ receita.subcategoria.categoria.cor }}; font-size: 1.1rem;"></i>
+                                                       style="color: {{ receita.subcategoria.categoria.cor }}; font-size: 1rem; flex-shrink: 0;"></i>
                                                 {% else %}
-                                                    <i class="bi bi-arrow-left-right me-2 text-muted"></i>
+                                                    <i class="bi bi-arrow-left-right me-2 text-muted" style="flex-shrink: 0; font-size: 1rem;"></i>
                                                 {% endif %}
-                                                <div>
-                                                    <div class="fw-medium">{{ receita.descricao }}</div>
+                                                <div class="overflow-hidden" style="min-width: 0;">
+                                                    <div class="fw-medium text-truncate" title="{{ receita.descricao }}" style="font-size: 0.9rem;">{{ receita.descricao }}</div>
                                                     {% if receita.recorrencia and receita.recorrencia.tipo == 'Parcelada' %}
                                                         {% set parcelas = receita.recorrencia.lancamentos|sort(attribute='data_vencimento') %}
                                                         {% set index = parcelas.index(receita) + 1 %}
-                                                        <small class="text-muted">Parcela {{ index }}/{{ receita.recorrencia.total_parcelas }}</small>
+                                                        <small class="text-muted" style="font-size: 0.75rem;">Parcela {{ index }}/{{ receita.recorrencia.total_parcelas }}</small>
                                                     {% endif %}
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class="d-md-table-cell">
-                                            <small class="text-muted">{{ receita.conta.nome }}</small>
+                                        <td class="d-none d-lg-table-cell" style="width: 80px; padding: 6px 4px;">
+                                            <small class="text-muted text-truncate d-block" style="font-size: 0.75rem;" title="{{ receita.conta.nome }}">{{ receita.conta.nome[:8] }}{% if receita.conta.nome|length > 8 %}...{% endif %}</small>
                                         </td>
-                                        <td>
-                                            <span class="fw-bold text-success">+ {{ receita.valor | currency }}</span>
+                                        <td class="text-end" style="width: 90px; padding: 6px 4px;">
+                                            <span class="fw-bold text-success text-nowrap" style="font-size: 0.85rem;">+ {{ receita.valor | currency }}</span>
                                         </td>
-                                        <td class="text-center">
+                                        <td class="text-center" style="width: 100px; padding: 6px 4px;">
                                             <div class="btn-group btn-group-sm" role="group">
                                                 <form action="{{ url_for('dashboard_bp.marcar_pago', id=receita.id) }}" method="POST" class="d-inline">
                                                     {% if receita.status == 'Pendente' %}
-                                                        <button type="submit" class="btn btn-outline-success btn-sm" title="Marcar como Realizado">
-                                                            <i class="bi bi-check-circle"></i>
+                                                        <button type="submit" class="btn btn-outline-success btn-sm" title="Marcar como Realizado" style="padding: 2px 6px;">
+                                                            <i class="bi bi-check-circle" style="font-size: 0.8rem;"></i>
                                                         </button>
                                                     {% else %}
-                                                        <button type="submit" class="btn btn-success btn-sm" title="Marcar como Pendente">
-                                                            <i class="bi bi-check-circle-fill"></i>
+                                                        <button type="submit" class="btn btn-success btn-sm" title="Marcar como Pendente" style="padding: 2px 6px;">
+                                                            <i class="bi bi-check-circle-fill" style="font-size: 0.8rem;"></i>
                                                         </button>
                                                     {% endif %}
                                                 </form>
@@ -222,8 +222,9 @@
                                                             data-subcategoria-id="{{ receita.subcategoria_id }}"
                                                             data-conta-id="{{ receita.conta_id }}"
                                                             data-vencimento="{{ receita.data_vencimento.strftime('%Y-%m-%d') }}"
-                                                            title="Editar Recorrência">
-                                                        <i class="bi bi-pencil-fill"></i>
+                                                            title="Editar Recorrência"
+                                                            style="padding: 2px 6px;">
+                                                        <i class="bi bi-pencil-fill" style="font-size: 0.8rem;"></i>
                                                     </button>
                                                     <button type="button" class="btn btn-outline-danger btn-sm" 
                                                             data-bs-toggle="modal" 
@@ -232,8 +233,9 @@
                                                             data-recorrencia-id="{{ receita.recorrencia_id }}"
                                                             data-descricao="{{ receita.descricao }}"
                                                             data-vencimento="{{ receita.data_vencimento.strftime('%d/%m/%Y') }}"
-                                                            title="Excluir Recorrência">
-                                                        <i class="bi bi-trash-fill"></i>
+                                                            title="Excluir Recorrência"
+                                                            style="padding: 2px 6px;">
+                                                        <i class="bi bi-trash-fill" style="font-size: 0.8rem;"></i>
                                                     </button>
                                                 {% else %}
                                                     <button type="button" class="btn btn-outline-primary btn-sm" 
@@ -246,16 +248,18 @@
                                                             data-subcategoria-id="{{ receita.subcategoria_id }}"
                                                             data-conta-id="{{ receita.conta_id }}"
                                                             data-vencimento="{{ receita.data_vencimento.strftime('%Y-%m-%d') }}"
-                                                            title="Editar Lançamento">
-                                                        <i class="bi bi-pencil-fill"></i>
+                                                            title="Editar Lançamento"
+                                                            style="padding: 2px 6px;">
+                                                        <i class="bi bi-pencil-fill" style="font-size: 0.8rem;"></i>
                                                     </button>
                                                     <button type="button" class="btn btn-outline-danger btn-sm" 
                                                             data-bs-toggle="modal" 
                                                             data-bs-target="#modalExcluirUnico"
                                                             data-lancamento-id="{{ receita.id }}"
                                                             data-descricao="{{ receita.descricao }}"
-                                                            title="Excluir Lançamento">
-                                                        <i class="bi bi-trash-fill"></i>
+                                                            title="Excluir Lançamento"
+                                                            style="padding: 2px 6px;">
+                                                        <i class="bi bi-trash-fill" style="font-size: 0.8rem;"></i>
                                                     </button>
                                                 {% endif %}
                                             </div>
@@ -292,16 +296,16 @@
                         <h5 class="text-danger mb-0 fw-bold">{{ total_despesas_completo | currency }}</h5>
                     </div>
                 </div>
-                <div class="card-body pt-3">
+                <div class="card-body pt-3" style="max-height: 500px; overflow-y: auto;">
                     <div class="table-responsive">
-                        <table class="table table-sm table-hover align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="border-0">Data</th>
-                                    <th class="border-0">Descrição</th>
-                                    <th class="border-0 d-md-table-cell">Conta</th>
-                                    <th class="border-0">Valor</th>
-                                    <th class="border-0 text-center">Ações</th>
+                        <table class="table table-sm table-hover align-middle mb-0">
+                            <thead class="table-light sticky-top">
+                                <tr style="font-size: 0.85rem;">
+                                    <th class="border-0 text-center" style="width: 60px; padding: 8px 4px;">Data</th>
+                                    <th class="border-0" style="width: 200px; padding: 8px;">Descrição</th>
+                                    <th class="border-0 d-none d-lg-table-cell" style="width: 80px; padding: 8px 4px;">Conta</th>
+                                    <th class="border-0 text-end" style="width: 90px; padding: 8px 4px;">Valor</th>
+                                    <th class="border-0 text-center" style="width: 100px; padding: 8px 4px;">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -309,85 +313,87 @@
                                 {% set despesas_ordenadas = todas_despesas|sort(attribute='data_vencimento') %}
                                 
                                 {% for item in despesas_ordenadas %}
-                                    <tr class="{% if item.status == 'Pago' %}table-success bg-opacity-25{% endif %} despesa-item">
-                                        <td>
+                                    <tr class="{% if item.status == 'Pago' %}table-success bg-opacity-25{% endif %} despesa-item" style="font-size: 0.9rem;">
+                                        <td class="text-center" style="width: 60px; padding: 6px 4px;">
                                             <div class="d-flex flex-column">
-                                                <span class="fw-medium">{{ item.data_vencimento.strftime('%d/%m') }}</span>
-                                                <small class="text-muted">{{ item.data_vencimento.strftime('%Y') }}</small>
+                                                <span class="fw-medium" style="font-size: 0.85rem;">{{ item.data_vencimento.strftime('%d/%m') }}</span>
+                                                <small class="text-muted" style="font-size: 0.7rem;">{{ item.data_vencimento.strftime('%Y') }}</small>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td style="width: 200px; padding: 6px 8px;">
                                             <div class="d-flex align-items-center">
                                                 {% if item.tipo == 'CartaoCredito' %}
-                                                    <i class="bi bi-credit-card-fill me-2 text-purple" style="color: #6f42c1; font-size: 1.1rem;"></i>
-                                                    <div>
-                                                        <div class="fw-medium">{{ item.descricao }}</div>
+                                                    <i class="bi bi-credit-card-fill me-2 text-purple" style="color: #6f42c1; font-size: 1rem; flex-shrink: 0;"></i>
+                                                    <div class="overflow-hidden">
+                                                        <div class="fw-medium text-truncate" style="font-size: 0.9rem;">{{ item.descricao }}</div>
                                                         {% if item.valor == 0 %}
-                                                            <small class="text-muted">Sem gastos no mês</small>
+                                                            <small class="text-muted" style="font-size: 0.75rem;">Sem gastos no mês</small>
                                                         {% endif %}
                                                     </div>
                                                 {% else %}
                                                     {% if item.subcategoria %}
                                                         <i class="{{ item.subcategoria.categoria.icone }} me-2" 
-                                                           style="color: {{ item.subcategoria.categoria.cor }}; font-size: 1.1rem;"></i>
+                                                           style="color: {{ item.subcategoria.categoria.cor }}; font-size: 1rem; flex-shrink: 0;"></i>
                                                     {% else %}
-                                                        <i class="bi bi-arrow-left-right me-2 text-muted"></i>
+                                                        <i class="bi bi-arrow-left-right me-2 text-muted" style="flex-shrink: 0; font-size: 1rem;"></i>
                                                     {% endif %}
-                                                    <div>
-                                                        <div class="fw-medium">{{ item.descricao }}</div>
+                                                    <div class="overflow-hidden">
+                                                        <div class="fw-medium text-truncate" style="font-size: 0.9rem;">{{ item.descricao }}</div>
                                                         {% if item.recorrencia and item.recorrencia.tipo == 'Parcelada' %}
                                                             {% set parcelas = item.recorrencia.lancamentos|sort(attribute='data_vencimento') %}
                                                             {% set index = parcelas.index(item) + 1 %}
-                                                            <small class="text-muted">Parcela {{ index }}/{{ item.recorrencia.total_parcelas }}</small>
+                                                            <small class="text-muted" style="font-size: 0.75rem;">Parcela {{ index }}/{{ item.recorrencia.total_parcelas }}</small>
                                                         {% endif %}
                                                     </div>
                                                 {% endif %}
                                             </div>
                                         </td>
-                                        <td class="d-md-table-cell">
-                                            <small class="text-muted">
+                                        <td class="d-none d-lg-table-cell" style="width: 80px; padding: 6px 4px;">
+                                            <small class="text-muted text-truncate d-block" style="font-size: 0.75rem;">
                                                 {% if item.tipo == 'CartaoCredito' %}
                                                     {% if item.cartao.conta_pagamento %}
-                                                        {{ item.cartao.conta_pagamento.nome }}
+                                                        {% set nome_conta = item.cartao.conta_pagamento.nome %}
+                                                        <span title="{{ nome_conta }}">{{ nome_conta[:8] }}{% if nome_conta|length > 8 %}...{% endif %}</span>
                                                     {% else %}
-                                                        <span class="text-warning">Conta não definida</span>
+                                                        <span class="text-warning">N/D</span>
                                                     {% endif %}
                                                 {% else %}
-                                                    {{ item.conta.nome }}
+                                                    {% set nome_conta = item.conta.nome %}
+                                                    <span title="{{ nome_conta }}">{{ nome_conta[:8] }}{% if nome_conta|length > 8 %}...{% endif %}</span>
                                                 {% endif %}
                                             </small>
                                         </td>
-                                        <td>
-                                            <span class="fw-bold text-danger">- {{ item.valor | currency }}</span>
+                                        <td class="text-end" style="width: 90px; padding: 6px 4px;">
+                                            <span class="fw-bold text-danger text-nowrap" style="font-size: 0.85rem;">- {{ item.valor | currency }}</span>
                                         </td>
-                                        <td class="text-center">
+                                        <td class="text-center" style="width: 100px; padding: 6px 4px;">
                                             {% if item.tipo == 'CartaoCredito' %}
                                                 {% set fatura_paga = item.cartao.fatura_paga_mes(ano_selecionado, mes_selecionado) %}
                                                 <div class="d-flex flex-column align-items-center">
                                                     {% if fatura_paga %}
-                                                        <span class="badge bg-success mb-1">
+                                                        <span class="badge bg-success mb-1 text-nowrap" style="font-size: 0.7rem;">
                                                             <i class="bi bi-check-circle-fill"></i> Paga
                                                         </span>
                                                     {% else %}
-                                                        <span class="badge bg-warning mb-1">
+                                                        <span class="badge bg-warning mb-1 text-nowrap" style="font-size: 0.7rem;">
                                                             <i class="bi bi-clock"></i> Pendente
                                                         </span>
                                                     {% endif %}
                                                     <a href="{{ url_for('cartoes_bp.extrato_cartao', cartao_id=item.cartao.id, ano=ano_selecionado, mes=mes_selecionado) }}" 
-                                                       class="btn btn-outline-primary btn-sm">
-                                                        <i class="bi bi-file-text"></i>
+                                                       class="btn btn-outline-primary btn-sm" style="padding: 2px 6px;">
+                                                        <i class="bi bi-file-text" style="font-size: 0.8rem;"></i>
                                                     </a>
                                                 </div>
                                             {% else %}
                                                 <div class="btn-group btn-group-sm" role="group">
                                                     <form action="{{ url_for('dashboard_bp.marcar_pago', id=item.id) }}" method="POST" class="d-inline">
                                                         {% if item.status == 'Pendente' %}
-                                                            <button type="submit" class="btn btn-outline-success btn-sm" title="Marcar como Realizado">
-                                                                <i class="bi bi-check-circle"></i>
+                                                            <button type="submit" class="btn btn-outline-success btn-sm" title="Marcar como Realizado" style="padding: 2px 6px;">
+                                                                <i class="bi bi-check-circle" style="font-size: 0.8rem;"></i>
                                                             </button>
                                                         {% else %}
-                                                            <button type="submit" class="btn btn-success btn-sm" title="Marcar como Pendente">
-                                                                <i class="bi bi-check-circle-fill"></i>
+                                                            <button type="submit" class="btn btn-success btn-sm" title="Marcar como Pendente" style="padding: 2px 6px;">
+                                                                <i class="bi bi-check-circle-fill" style="font-size: 0.8rem;"></i>
                                                             </button>
                                                         {% endif %}
                                                     </form>
@@ -410,8 +416,9 @@
                                                                     data-cartao-id=""
                                                                 {% endif %}
                                                                 data-vencimento="{{ item.data_vencimento.strftime('%Y-%m-%d') }}"
-                                                                title="Editar Recorrência">
-                                                            <i class="bi bi-pencil-fill"></i>
+                                                                title="Editar Recorrência"
+                                                                style="padding: 2px 6px;">
+                                                            <i class="bi bi-pencil-fill" style="font-size: 0.8rem;"></i>
                                                         </button>
                                                         <button type="button" class="btn btn-outline-danger btn-sm" 
                                                                 data-bs-toggle="modal" 
@@ -420,8 +427,9 @@
                                                                 data-recorrencia-id="{{ item.recorrencia_id }}"
                                                                 data-descricao="{{ item.descricao }}"
                                                                 data-vencimento="{{ item.data_vencimento.strftime('%d/%m/%Y') }}"
-                                                                title="Excluir Recorrência">
-                                                            <i class="bi bi-trash-fill"></i>
+                                                                title="Excluir Recorrência"
+                                                                style="padding: 2px 6px;">
+                                                            <i class="bi bi-trash-fill" style="font-size: 0.8rem;"></i>
                                                         </button>
                                                     {% else %}
                                                         <button type="button" class="btn btn-outline-primary btn-sm" 
@@ -440,16 +448,18 @@
                                                                     data-cartao-id=""
                                                                 {% endif %}
                                                                 data-vencimento="{{ item.data_vencimento.strftime('%Y-%m-%d') }}"
-                                                                title="Editar Lançamento">
-                                                            <i class="bi bi-pencil-fill"></i>
+                                                                title="Editar Lançamento"
+                                                                style="padding: 2px 6px;">
+                                                            <i class="bi bi-pencil-fill" style="font-size: 0.8rem;"></i>
                                                         </button>
                                                         <button type="button" class="btn btn-outline-danger btn-sm" 
                                                                 data-bs-toggle="modal" 
                                                                 data-bs-target="#modalExcluirUnico"
                                                                 data-lancamento-id="{{ item.id }}"
                                                                 data-descricao="{{ item.descricao }}"
-                                                                title="Excluir Lançamento">
-                                                            <i class="bi bi-trash-fill"></i>
+                                                                title="Excluir Lançamento"
+                                                                style="padding: 2px 6px;">
+                                                            <i class="bi bi-trash-fill" style="font-size: 0.8rem;"></i>
                                                         </button>
                                                     {% endif %}
                                                 </div>
@@ -477,42 +487,42 @@
     <!-- Resumo Financeiro Modernizado -->
     <div class="row">
         <div class="col-12">
-            <div class="card border-0 shadow-sm resumo-financeiro">
-                <div class="card-body text-white">
+            <div class="card border-0 shadow-sm resumo-financeiro" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white" style="padding: 2rem;">
                     <h5 class="card-title text-center mb-4 d-flex align-items-center justify-content-center">
-                        <div class="icon-container bg-white text-primary me-2">
-                            <i class="bi bi-calculator"></i>
+                        <div class="icon-container bg-white text-primary me-2" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-calculator" style="font-size: 1.2rem;"></i>
                         </div>
                         Resumo Financeiro - {{ meses_disponiveis[mes_selecionado-1].nome }}/{{ ano_selecionado }}
                     </h5>
                     <div class="row text-center">
                         <div class="col-md-3 mb-3">
-                            <div class="bg-white bg-opacity-10 p-3 rounded">
-                                <i class="bi bi-arrow-up-circle-fill fs-2 text-success-emphasis mb-2 d-block"></i>
-                                <h6 class="mb-1 opacity-75 text-uppercase small">Receitas</h6>
+                            <div class="bg-white bg-opacity-15 p-3 rounded-3 h-100">
+                                <i class="bi bi-arrow-up-circle-fill fs-2 text-success-emphasis mb-2 d-block" style="color: #90EE90 !important;"></i>
+                                <h6 class="mb-1 opacity-75 text-uppercase small fw-semibold">Receitas</h6>
                                 <h4 class="mb-0 fw-bold">{{ total_receitas_mes | currency }}</h4>
                             </div>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <div class="bg-white bg-opacity-10 p-3 rounded">
-                                <i class="bi bi-arrow-down-circle-fill fs-2 text-danger-emphasis mb-2 d-block"></i>
-                                <h6 class="mb-1 opacity-75 text-uppercase small">Despesas</h6>
+                            <div class="bg-white bg-opacity-15 p-3 rounded-3 h-100">
+                                <i class="bi bi-arrow-down-circle-fill fs-2 text-danger-emphasis mb-2 d-block" style="color: #FFB6C1 !important;"></i>
+                                <h6 class="mb-1 opacity-75 text-uppercase small fw-semibold">Despesas</h6>
                                 <h4 class="mb-0 fw-bold">{{ total_despesas_completo | currency }}</h4>
                             </div>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <div class="bg-white bg-opacity-10 p-3 rounded">
+                            <div class="bg-white bg-opacity-15 p-3 rounded-3 h-100">
                                 {% set resultado_mes = total_receitas_mes - total_despesas_completo %}
-                                <i class="bi bi-{% if resultado_mes >= 0 %}graph-up{% else %}graph-down{% endif %} fs-2 {% if resultado_mes >= 0 %}text-success-emphasis{% else %}text-danger-emphasis{% endif %} mb-2 d-block"></i>
-                                <h6 class="mb-1 opacity-75 text-uppercase small">Resultado</h6>
-                                <h4 class="mb-0 fw-bold">{{ resultado_mes | currency }}</h4>
+                                <i class="bi bi-{% if resultado_mes >= 0 %}graph-up{% else %}graph-down{% endif %} fs-2 mb-2 d-block" style="color: {% if resultado_mes >= 0 %}#90EE90{% else %}#FFB6C1{% endif %} !important;"></i>
+                                <h6 class="mb-1 opacity-75 text-uppercase small fw-semibold">Resultado</h6>
+                                <h4 class="mb-0 fw-bold" style="color: {% if resultado_mes >= 0 %}#90EE90{% else %}#FFB6C1{% endif %};">{{ resultado_mes | currency }}</h4>
                             </div>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <div class="bg-white bg-opacity-10 p-3 rounded">
+                            <div class="bg-white bg-opacity-15 p-3 rounded-3 h-100">
                                 {% set projecao_proximo = total_contas_corrente + receitas_pendentes - total_despesas_pendentes %}
-                                <i class="bi bi-crystal-ball fs-2 text-info-emphasis mb-2 d-block"></i>
-                                <h6 class="mb-1 opacity-75 text-uppercase small">Projeção</h6>
+                                <i class="bi bi-crystal-ball fs-2 text-info-emphasis mb-2 d-block" style="color: #87CEEB !important;"></i>
+                                <h6 class="mb-1 opacity-75 text-uppercase small fw-semibold">Projeção</h6>
                                 <h4 class="mb-0 fw-bold">{{ projecao_proximo | currency }}</h4>
                             </div>
                         </div>
