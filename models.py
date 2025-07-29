@@ -74,6 +74,36 @@ class CartaoCredito(db.Model):
         ).scalar() or 0.0
         return total
 
+    def fatura_paga_mes(self, ano, mes):
+        """Verifica se a fatura do mês está marcada como paga"""
+        fatura = db.session.query(FaturaCartao).filter(
+            FaturaCartao.cartao_id == self.id,
+            FaturaCartao.ano == ano,
+            FaturaCartao.mes == mes
+        ).first()
+        return fatura.paga if fatura else False
+
+    def marcar_fatura_mes(self, ano, mes, paga=True):
+        """Marca/desmarca a fatura de um mês como paga"""
+        fatura = db.session.query(FaturaCartao).filter(
+            FaturaCartao.cartao_id == self.id,
+            FaturaCartao.ano == ano,
+            FaturaCartao.mes == mes
+        ).first()
+        
+        if fatura:
+            fatura.paga = paga
+        else:
+            fatura = FaturaCartao(
+                cartao_id=self.id,
+                ano=ano,
+                mes=mes,
+                paga=paga
+            )
+            db.session.add(fatura)
+        
+        return fatura
+
     def __repr__(self):
         return f'<CartaoCredito {self.nome}>'
 
@@ -91,6 +121,20 @@ class TransferenciaGrupo(db.Model):
     __tablename__ = 'transferencia_grupos'
     id = db.Column(db.Integer, primary_key=True)
     data_criacao = db.Column(db.Date, nullable=False, default=date.today)
+
+class FaturaCartao(db.Model):
+    __tablename__ = 'faturas_cartao'
+    id = db.Column(db.Integer, primary_key=True)
+    cartao_id = db.Column(db.Integer, db.ForeignKey('cartoes_credito.id'), nullable=False)
+    ano = db.Column(db.Integer, nullable=False)
+    mes = db.Column(db.Integer, nullable=False)
+    paga = db.Column(db.Boolean, nullable=False, default=False)
+    data_pagamento = db.Column(db.Date, nullable=True)
+    data_criacao = db.Column(db.Date, nullable=False, default=date.today)
+    
+    cartao = db.relationship('CartaoCredito', backref=db.backref('faturas', lazy=True))
+    
+    __table_args__ = (db.UniqueConstraint('cartao_id', 'ano', 'mes', name='unique_fatura_mes'),)
 
 class Lancamento(db.Model):
     __tablename__ = 'lancamentos'

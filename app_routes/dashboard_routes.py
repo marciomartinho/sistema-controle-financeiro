@@ -5,7 +5,7 @@ from datetime import datetime
 from sqlalchemy import extract
 
 from app import db
-from models import Lancamento, Conta, CartaoCredito, Categoria
+from models import Lancamento, Conta, CartaoCredito, Categoria, FaturaCartao
 
 dashboard_bp = Blueprint(
     'dashboard_bp', __name__,
@@ -33,57 +33,43 @@ def dashboard():
     cartoes_ativos = CartaoCredito.query.filter_by(ativo=True).all()
     
     for cartao in cartoes_ativos:
-        # Verificar se já existe um lançamento de fatura para este cartão neste mês
-        fatura_existente = Lancamento.query.filter(
+        # Calcular valor dos gastos do cartão no mês
+        valor_gastos = db.session.query(db.func.sum(Lancamento.valor)).filter(
             extract('year', Lancamento.data_vencimento) == ano_selecionado,
             extract('month', Lancamento.data_vencimento) == mes_selecionado,
-            Lancamento.conta_id == cartao.conta_pagamento_id,
-            Lancamento.descricao == f'Fatura {cartao.nome}'
-        ).first()
+            Lancamento.cartao_credito_id == cartao.id,
+            Lancamento.tipo == 'Despesa'
+        ).scalar() or 0.0
         
-        if not fatura_existente:
+        # Apenas mostrar se houver gastos no cartão
+        if valor_gastos > 0:
+            # Verificar status da fatura
+            fatura_status = FaturaCartao.query.filter_by(
+                cartao_id=cartao.id,
+                ano=ano_selecionado,
+                mes=mes_selecionado
+            ).first()
+            
+            status_fatura = 'Pago' if (fatura_status and fatura_status.paga) else 'Pendente'
+            
             # Criar data de vencimento da fatura
             try:
                 data_vencimento = datetime(ano_selecionado, mes_selecionado, cartao.dia_vencimento).date()
             except ValueError:
-                # Se o dia não existir no mês (ex: 31 de fevereiro), usar o último dia do mês
                 import calendar
                 ultimo_dia = calendar.monthrange(ano_selecionado, mes_selecionado)[1]
                 data_vencimento = datetime(ano_selecionado, mes_selecionado, min(cartao.dia_vencimento, ultimo_dia)).date()
             
-            # Calcular valor da fatura baseado nos lançamentos do cartão no mês atual
-            valor_fatura = db.session.query(db.func.sum(Lancamento.valor)).filter(
-                extract('year', Lancamento.data_vencimento) == ano_selecionado,
-                extract('month', Lancamento.data_vencimento) == mes_selecionado,
-                Lancamento.cartao_credito_id == cartao.id,
-                Lancamento.tipo == 'Despesa',
-                ~Lancamento.descricao.like('Fatura %')  # Excluir faturas já criadas
-            ).scalar() or 0.0
-            
-            # Criar objeto similar ao Lancamento para exibição
             fatura = {
                 'id': f'cartao_{cartao.id}_{ano_selecionado}_{mes_selecionado}',
                 'descricao': f'Fatura {cartao.nome}',
-                'valor': valor_fatura,
+                'valor': valor_gastos,
                 'data_vencimento': data_vencimento,
                 'cartao': cartao,
-                'status': 'Pendente',
+                'status': status_fatura,
                 'tipo': 'CartaoCredito'
             }
             faturas_cartoes.append(fatura)
-        else:
-            # Se a fatura já existe, incluí-la na lista
-            fatura_dict = {
-                'id': fatura_existente.id,
-                'descricao': fatura_existente.descricao,
-                'valor': fatura_existente.valor,
-                'data_vencimento': fatura_existente.data_vencimento,
-                'cartao': cartao,
-                'status': fatura_existente.status,
-                'tipo': 'CartaoCredito',
-                'lancamento_existente': True
-            }
-            faturas_cartoes.append(fatura_dict)
 
     # Ordenar faturas de cartões por data de vencimento
     faturas_cartoes.sort(key=lambda x: x['data_vencimento'])
@@ -152,6 +138,24 @@ def marcar_pago(id):
     ano = lancamento.data_vencimento.year
     mes = lancamento.data_vencimento.month
     return redirect(url_for('dashboard_bp.dashboard', ano=ano, mes=mes))
+
+@dashboard_bp.route('/limpar_faturas_duplicadas')
+def limpar_faturas_duplicadas():
+    """Rota temporária para limpar faturas duplicadas"""
+    faturas_duplicadas = Lancamento.query.filter(
+        Lancamento.descricao.like('Fatura %'),
+        Lancamento.conta_id.isnot(None)
+    ).all()
+    
+    count = len(faturas_duplicadas)
+    
+    for fatura in faturas_duplicadas:
+        db.session.delete(fatura)
+    
+    db.session.commit()
+    
+    flash(f'{count} faturas duplicadas foram removidas!', 'success')
+    return redirect(url_for('dashboard_bp.dashboard'))
 
 
 @dashboard_bp.route('/cartoes/marcar_fatura_paga/<int:cartao_id>/<int:ano>/<int:mes>', methods=['POST'])

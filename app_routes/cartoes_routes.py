@@ -9,7 +9,7 @@ from datetime import datetime
 
 # Importa o 'db' e os modelos do arquivo principal da aplicação
 from app import db, app
-from models import CartaoCredito, Conta, Categoria, Lancamento, Recorrencia
+from models import CartaoCredito, Conta, Categoria, Lancamento, Recorrencia, FaturaCartao
 
 # Cria o Blueprint
 cartoes_bp = Blueprint(
@@ -334,3 +334,47 @@ def excluir_lancamento_cartao():
     
     db.session.commit()
     return redirect(url_for('cartoes_bp.extrato_cartao', cartao_id=cartao_id, ano=ano, mes=mes))
+
+@cartoes_bp.route('/cartoes/marcar_fatura_mes_paga/<int:cartao_id>/<int:ano>/<int:mes>', methods=['POST'])
+def marcar_fatura_mes_paga(cartao_id, ano, mes):
+    """Marcar/desmarcar fatura de um mês específico como paga"""
+    from models import FaturaCartao
+    
+    cartao = CartaoCredito.query.get_or_404(cartao_id)
+    
+    # Buscar se já existe registro da fatura
+    fatura = FaturaCartao.query.filter_by(
+        cartao_id=cartao_id,
+        ano=ano,
+        mes=mes
+    ).first()
+    
+    if fatura:
+        # Se existe, alternar status
+        fatura.paga = not fatura.paga
+        if fatura.paga:
+            fatura.data_pagamento = datetime.now().date()
+            flash(f'Fatura de {meses_nomes[mes-1]}/{ano} do {cartao.nome} marcada como PAGA!', 'success')
+        else:
+            fatura.data_pagamento = None
+            flash(f'Fatura de {meses_nomes[mes-1]}/{ano} do {cartao.nome} marcada como PENDENTE.', 'warning')
+    else:
+        # Se não existe, criar como paga
+        fatura = FaturaCartao(
+            cartao_id=cartao_id,
+            ano=ano,
+            mes=mes,
+            paga=True,
+            data_pagamento=datetime.now().date()
+        )
+        db.session.add(fatura)
+        flash(f'Fatura de {meses_nomes[mes-1]}/{ano} do {cartao.nome} marcada como PAGA!', 'success')
+    
+    db.session.commit()
+    return redirect(url_for('cartoes_bp.extrato_cartao', cartao_id=cartao_id, ano=ano, mes=mes))
+
+# Lista dos nomes dos meses para mensagens
+meses_nomes = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+]

@@ -231,20 +231,17 @@
                                 <td class="text-danger">- {{ item.valor | currency }}</td>
                                 <td class="text-center">
                                     {% if item.tipo == 'CartaoCredito' %}
-                                        {% if item.cartao.conta_pagamento %}
-                                            <form action="{{ url_for('dashboard_bp.marcar_fatura_paga', cartao_id=item.cartao.id, ano=ano_selecionado, mes=mes_selecionado) }}" method="POST" class="d-inline">
-                                                {% if item.status == 'Pendente' %}
-                                                    <button type="submit" class="btn btn-sm btn-outline-secondary" title="Marcar fatura como Paga"><i class="bi bi-check-circle"></i></button>
-                                                {% else %}
-                                                    <button type="submit" class="btn btn-sm btn-success" title="Marcar fatura como Pendente"><i class="bi bi-check-circle-fill"></i></button>
-                                                {% endif %}
-                                            </form>
+                                        <!-- Faturas de cartão - apenas mostrar status -->
+                                        {% set fatura_paga = item.cartao.fatura_paga_mes(ano_selecionado, mes_selecionado) %}
+                                        {% if fatura_paga %}
+                                            <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Paga</span>
                                         {% else %}
-                                            <button class="btn btn-sm btn-outline-warning" disabled title="Configure uma conta de pagamento para este cartão">
-                                                <i class="bi bi-exclamation-triangle"></i>
-                                            </button>
+                                            <span class="badge bg-warning"><i class="bi bi-clock"></i> Pendente</span>
                                         {% endif %}
+                                        <br>
+                                        <small class="text-muted">Gerencie no <a href="{{ url_for('cartoes_bp.extrato_cartao', cartao_id=item.cartao.id, ano=ano_selecionado, mes=mes_selecionado) }}">extrato</a></small>
                                     {% else %}
+                                        <!-- Lançamentos normais - botões funcionais -->
                                         <form action="{{ url_for('dashboard_bp.marcar_pago', id=item.id) }}" method="POST" class="d-inline">
                                             {% if item.status == 'Pendente' %}
                                                 <button type="submit" class="btn btn-sm btn-outline-secondary" title="Marcar como Realizado"><i class="bi bi-check-circle"></i></button>
@@ -252,13 +249,7 @@
                                                 <button type="submit" class="btn btn-sm btn-success" title="Marcar como Pendente"><i class="bi bi-check-circle-fill"></i></button>
                                             {% endif %}
                                         </form>
-                                    {% endif %}
-                                    
-                                    {% if item.tipo == 'CartaoCredito' %}
-                                        <!-- Faturas de cartão não têm edição/exclusão no dashboard -->
-                                        <button class="btn btn-sm btn-outline-primary" disabled><i class="bi bi-pencil-fill"></i></button>
-                                        <button class="btn btn-sm btn-outline-danger" disabled><i class="bi bi-trash-fill"></i></button>
-                                    {% else %}
+                                        
                                         {% if item.recorrencia_id %}
                                             <!-- Lançamento de Recorrência -->
                                             <button type="button" class="btn btn-sm btn-outline-primary" 

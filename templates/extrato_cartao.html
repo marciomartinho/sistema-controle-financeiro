@@ -69,6 +69,22 @@
             <div class="col-md-6 text-end">
                 <h4 class="mb-0">Total: {{ total_mes | currency }}</h4>
                 <small>{{ lancamentos|length }} lançamento(s)</small>
+                
+                <!-- Botão para marcar fatura como paga -->
+                <div class="mt-2">
+                    <form action="{{ url_for('cartoes_bp.marcar_fatura_mes_paga', cartao_id=cartao_id, ano=ano, mes=mes) }}" method="POST" class="d-inline">
+                        {% set fatura_paga = cartao_selecionado.fatura_paga_mes(ano, mes) %}
+                        {% if fatura_paga %}
+                            <button type="submit" class="btn btn-success btn-sm">
+                                <i class="bi bi-check-circle-fill"></i> Fatura Paga
+                            </button>
+                        {% else %}
+                            <button type="submit" class="btn btn-outline-light btn-sm">
+                                <i class="bi bi-circle"></i> Marcar como Paga
+                            </button>
+                        {% endif %}
+                    </form>
+                </div>
             </div>
         </div>
     </div>
