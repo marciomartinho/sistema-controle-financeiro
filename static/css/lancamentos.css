@@ -20,6 +20,27 @@
     max-width: 100%;
 }
 
+/* Estilo para o botão de Novo Lançamento */
+.card-header {
+    background-color: #f8f9fa; /* Cor de fundo clara para o cabeçalho */
+    border-bottom: 1px solid #e9ecef;
+}
+
+.card-header .btn-novo-lancamento {
+    
+    border: 1px solid #ced4da;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+    color: #0d6efd;
+    font-weight: bold;
+}
+
+.card-header .btn-novo-lancamento:hover {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25);
+}
+
 /* Estilo para os cards de seleção de tipo de lançamento */
 .tipo-lancamento-container {
     display: flex;
@@ -188,6 +209,12 @@
 }
 .lancamento-cartao {
     border-left: 4px solid #6f42c1;
+}
+
+/* Estilo específico para a coluna de Tipo (Recorrência) */
+.badge.bg-primary-light {
+    background-color: #0d6efd1a !important;
+    color: #0d6efd !important;
 }
 
 /* Empty State */
