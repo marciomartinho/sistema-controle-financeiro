@@ -1,71 +1,642 @@
 {% extends 'base.html' %}
 
+{% block title %}Contas - {{ super() }}{% endblock %}
+
 {% block content %}
-    <h2>Gestão de Contas</h2>
-    <hr>
-    <div class="card bg-light mb-4">
-        <div class="card-body">
-            <h5 class="card-title">Adicionar Nova Conta</h5>
+<div class="contas-container">
+    <!-- Header da Página -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-0 text-primary fw-bold">
+                <i class="bi bi-wallet2 me-2"></i>
+                Gestão de Contas
+            </h1>
+            <p class="text-muted mb-0">Gerencie suas contas correntes e investimentos</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('dashboard_bp.dashboard') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-speedometer2"></i>
+                Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Formulário de Nova Conta -->
+    <div class="card shadow-sm mb-5 border-0">
+        <div class="card-header bg-gradient text-white">
+            <h3 class="h5 mb-0 d-flex align-items-center">
+                <div class="icon-container bg-white text-primary me-2">
+                    <i class="bi bi-plus-lg"></i>
+                </div>
+                Adicionar Nova Conta
+            </h3>
+        </div>
+        <div class="card-body p-4">
             <form method="POST" action="{{ url_for('contas_bp.gerenciar_contas') }}" enctype="multipart/form-data">
-                <div class="row">
-                    <div class="col-md-6 mb-3"><label for="nome" class="form-label">Nome da Conta</label><input type="text" class="form-control" id="nome" name="nome" required></div>
-                    <div class="col-md-6 mb-3"><label for="saldo_inicial" class="form-label">Saldo Inicial (R$)</label><input type="number" step="0.01" class="form-control" id="saldo_inicial" name="saldo_inicial" value="0.00" required></div>
+                <!-- Campos Básicos -->
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3">
+                        <label for="nome" class="form-label fw-semibold">
+                            <i class="bi bi-bank text-primary"></i>
+                            Nome da Conta
+                        </label>
+                        <input type="text" class="form-control form-control-modern" id="nome" name="nome" 
+                               placeholder="Ex: Conta Corrente Banco do Brasil" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="saldo_inicial" class="form-label fw-semibold">
+                            <i class="bi bi-currency-dollar text-primary"></i>
+                            Saldo Inicial (R$)
+                        </label>
+                        <input type="number" step="0.01" class="form-control form-control-modern" 
+                               id="saldo_inicial" name="saldo_inicial" value="0.00" 
+                               placeholder="0,00" required>
+                    </div>
                 </div>
-                <div class="row">
-                    <div class="col-md-4 mb-3"><label for="tipo_conta" class="form-label">Tipo de Conta</label><select class="form-select" id="tipo_conta" name="tipo_conta" onchange="toggleInvestimento()"><option value="Corrente">Conta Corrente</option><option value="Investimento">Investimento</option></select></div>
-                    <div class="col-md-4 mb-3" id="campo_tipo_investimento" style="display: none;"><label for="tipo_investimento" class="form-label">Tipo de Investimento</label><input type="text" class="form-control" id="tipo_investimento" name="tipo_investimento" placeholder="Ex: CDB, Ações..."></div>
-                    <div class="col-md-4 mb-3"><label for="logo_imagem" class="form-label">Logo do Banco (opcional)</label><input class="form-control" type="file" id="logo_imagem" name="logo_imagem"></div>
+                
+                <!-- Tipo de Conta -->
+                <div class="row mb-4">
+                    <div class="col-md-4 mb-3">
+                        <label for="tipo_conta" class="form-label fw-semibold">
+                            <i class="bi bi-list-ul text-primary"></i>
+                            Tipo de Conta
+                        </label>
+                        <select class="form-select form-control-modern" id="tipo_conta" name="tipo_conta" onchange="toggleInvestimento()">
+                            <option value="Corrente">💳 Conta Corrente</option>
+                            <option value="Investimento">📈 Investimento</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3" id="campo_tipo_investimento" style="display: none;">
+                        <label for="tipo_investimento" class="form-label fw-semibold">
+                            <i class="bi bi-graph-up text-primary"></i>
+                            Tipo de Investimento
+                        </label>
+                        <input type="text" class="form-control form-control-modern" id="tipo_investimento" 
+                               name="tipo_investimento" placeholder="Ex: CDB, Ações, Tesouro Direto...">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="logo_imagem" class="form-label fw-semibold">
+                            <i class="bi bi-image text-primary"></i>
+                            Logo do Banco (opcional)
+                        </label>
+                        <input class="form-control form-control-modern" type="file" id="logo_imagem" 
+                               name="logo_imagem" accept="image/*">
+                        <small class="text-muted">Formatos aceitos: JPG, PNG, GIF</small>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-primary">Salvar Conta</button>
+
+                <!-- Botão de Submissão -->
+                <div class="d-flex justify-content-end pt-3 border-top">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-check-lg"></i>
+                        Salvar Conta
+                    </button>
+                </div>
             </form>
         </div>
     </div>
-    <h3>Minhas Contas</h3>
-    <table class="table table-striped table-hover align-middle">
-        <thead class="table-dark">
-            <tr>
-                <th style="width: 10%;">Logo</th><th style="width: 35%;">Nome</th><th style="width: 20%;">Tipo</th><th style="width: 20%;">Saldo Inicial</th><th style="width: 15%; text-align: center;">Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for conta in contas_corrente %}
-            <tr>
-                <td>{% if conta.logo_imagem %}<img src="{{ url_for('static', filename='uploads/' + conta.logo_imagem) }}" alt="Logo {{ conta.nome }}" class="img-fluid" style="max-width: 50px; border-radius: 5px;">{% endif %}</td>
-                <td>{{ conta.nome }}</td>
-                <td>{{ conta.tipo_conta }}</td>
-                <td>{{ conta.saldo_inicial | currency }}</td>
-                <td style="text-align: center;"><a href="{{ url_for('contas_bp.editar_conta', id=conta.id) }}" class="btn btn-sm btn-warning">Editar</a></td>
-            </tr>
-            {% endfor %}
-            {% for conta in contas_investimento %}
-            <tr>
-                <td>{% if conta.logo_imagem %}<img src="{{ url_for('static', filename='uploads/' + conta.logo_imagem) }}" alt="Logo {{ conta.nome }}" class="img-fluid" style="max-width: 50px; border-radius: 5px;">{% endif %}</td>
-                <td>
-                    {{ conta.nome }}
-                    {% if conta.tipo_investimento %}<small class="text-muted d-block">{{ conta.tipo_investimento }}</small>{% endif %}
-                </td>
-                <td>{{ conta.tipo_conta }}</td>
-                <td>{{ conta.saldo_inicial | currency }}</td>
-                <td style="text-align: center;"><a href="{{ url_for('contas_bp.editar_conta', id=conta.id) }}" class="btn btn-sm btn-warning">Editar</a></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-        <tfoot class="table-group-divider">
-            <tr><td colspan="4" class="text-end"><strong>Total Contas Corrente:</strong></td><td><strong>{{ total_corrente | currency }}</strong></td></tr>
-            <tr><td colspan="4" class="text-end"><strong>Total Investimentos:</strong></td><td><strong>{{ total_investimento | currency }}</strong></td></tr>
-            <tr class="table-dark"><td colspan="4" class="text-end"><strong>PATRIMÔNIO TOTAL:</strong></td><td><strong>{{ total_geral | currency }}</strong></td></tr>
-        </tfoot>
-    </table>
-    <script>
-        function toggleInvestimento() {
-            var tipoConta = document.getElementById('tipo_conta').value;
-            var campoInvestimento = document.getElementById('campo_tipo_investimento');
-            if (tipoConta === 'Investimento') {
-                campoInvestimento.style.display = 'block';
-            } else {
-                campoInvestimento.style.display = 'none';
-                document.getElementById('tipo_investimento').value = '';
-            }
-        }
-    </script>
+
+    <!-- Cards de Resumo -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100 resumo-card corrente-card">
+                <div class="card-body text-center p-4">
+                    <div class="icon-container bg-primary bg-opacity-10 text-primary mx-auto mb-3">
+                        <i class="bi bi-wallet2 fs-1"></i>
+                    </div>
+                    <h6 class="text-muted mb-1 text-uppercase small">Contas Corrente</h6>
+                    <h3 class="fw-bold text-primary mb-2">{{ contas_corrente|length }}</h3>
+                    <h5 class="fw-bold text-success mb-0">{{ total_corrente | currency }}</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100 resumo-card investimento-card">
+                <div class="card-body text-center p-4">
+                    <div class="icon-container bg-success bg-opacity-10 text-success mx-auto mb-3">
+                        <i class="bi bi-graph-up fs-1"></i>
+                    </div>
+                    <h6 class="text-muted mb-1 text-uppercase small">Investimentos</h6>
+                    <h3 class="fw-bold text-success mb-2">{{ contas_investimento|length }}</h3>
+                    <h5 class="fw-bold text-info mb-0">{{ total_investimento | currency }}</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100 resumo-card total-card">
+                <div class="card-body text-center p-4">
+                    <div class="icon-container bg-warning bg-opacity-10 text-warning mx-auto mb-3">
+                        <i class="bi bi-calculator fs-1"></i>
+                    </div>
+                    <h6 class="text-muted mb-1 text-uppercase small">Patrimônio Total</h6>
+                    <h3 class="fw-bold text-warning mb-2">{{ (contas_corrente|length) + (contas_investimento|length) }}</h3>
+                    <h5 class="fw-bold text-primary mb-0">{{ total_geral | currency }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Contas -->
+    <div class="row">
+        <!-- Contas Corrente -->
+        {% if contas_corrente %}
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <h4 class="h5 mb-0 d-flex align-items-center text-primary">
+                        <div class="icon-container bg-primary bg-opacity-10 text-primary me-2">
+                            <i class="bi bi-wallet2"></i>
+                        </div>
+                        Contas Corrente
+                    </h4>
+                    <p class="text-muted mb-0 small">{{ contas_corrente|length }} conta(s) • {{ total_corrente | currency }}</p>
+                </div>
+                <div class="card-body pt-3">
+                    <div class="contas-list">
+                        {% for conta in contas_corrente %}
+                        <div class="conta-item">
+                            <div class="d-flex align-items-center">
+                                <div class="conta-logo me-3">
+                                    {% if conta.logo_imagem %}
+                                        <img src="{{ url_for('static', filename='uploads/' + conta.logo_imagem) }}" 
+                                             alt="Logo {{ conta.nome }}" 
+                                             class="rounded-circle" 
+                                             style="width: 48px; height: 48px; object-fit: cover; border: 2px solid var(--border-color);">
+                                    {% else %}
+                                        <div class="icon-container bg-primary bg-opacity-10 text-primary">
+                                            <i class="bi bi-bank"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="conta-info flex-grow-1">
+                                    <h6 class="conta-nome mb-1 fw-semibold">{{ conta.nome }}</h6>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">{{ conta.tipo_conta }}</small>
+                                        <span class="conta-saldo fw-bold {% if conta.saldo_inicial < 0 %}text-danger{% else %}text-success{% endif %}">
+                                            {{ conta.saldo_inicial | currency }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="conta-actions ms-3">
+                                    <a href="{{ url_for('contas_bp.editar_conta', id=conta.id) }}" 
+                                       class="btn btn-outline-primary btn-sm" 
+                                       title="Editar {{ conta.nome }}">
+                                        <i class="bi bi-pencil-fill"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% if not loop.last %}
+                        <hr class="my-3">
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Contas de Investimento -->
+        {% if contas_investimento %}
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <h4 class="h5 mb-0 d-flex align-items-center text-success">
+                        <div class="icon-container bg-success bg-opacity-10 text-success me-2">
+                            <i class="bi bi-graph-up"></i>
+                        </div>
+                        Contas de Investimento
+                    </h4>
+                    <p class="text-muted mb-0 small">{{ contas_investimento|length }} investimento(s) • {{ total_investimento | currency }}</p>
+                </div>
+                <div class="card-body pt-3">
+                    <div class="contas-list">
+                        {% for conta in contas_investimento %}
+                        <div class="conta-item">
+                            <div class="d-flex align-items-center">
+                                <div class="conta-logo me-3">
+                                    {% if conta.logo_imagem %}
+                                        <img src="{{ url_for('static', filename='uploads/' + conta.logo_imagem) }}" 
+                                             alt="Logo {{ conta.nome }}" 
+                                             class="rounded-circle" 
+                                             style="width: 48px; height: 48px; object-fit: cover; border: 2px solid var(--border-color);">
+                                    {% else %}
+                                        <div class="icon-container bg-success bg-opacity-10 text-success">
+                                            <i class="bi bi-graph-up"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="conta-info flex-grow-1">
+                                    <h6 class="conta-nome mb-1 fw-semibold">{{ conta.nome }}</h6>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            {{ conta.tipo_conta }}
+                                            {% if conta.tipo_investimento %}
+                                                • {{ conta.tipo_investimento }}
+                                            {% endif %}
+                                        </small>
+                                        <span class="conta-saldo fw-bold {% if conta.saldo_inicial < 0 %}text-danger{% else %}text-success{% endif %}">
+                                            {{ conta.saldo_inicial | currency }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="conta-actions ms-3">
+                                    <a href="{{ url_for('contas_bp.editar_conta', id=conta.id) }}" 
+                                       class="btn btn-outline-success btn-sm" 
+                                       title="Editar {{ conta.nome }}">
+                                        <i class="bi bi-pencil-fill"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% if not loop.last %}
+                        <hr class="my-3">
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Mensagem quando não há contas -->
+        {% if not contas_corrente and not contas_investimento %}
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                    <div class="empty-state">
+                        <div class="icon-container bg-primary bg-opacity-10 text-primary mx-auto mb-4" style="width: 80px; height: 80px;">
+                            <i class="bi bi-wallet2" style="font-size: 2.5rem;"></i>
+                        </div>
+                        <h4 class="text-primary mb-3">Nenhuma conta cadastrada</h4>
+                        <p class="text-muted mb-4">
+                            Cadastre sua primeira conta para começar a controlar suas finanças.
+                            <br>
+                            Você pode adicionar contas correntes, poupanças e investimentos.
+                        </p>
+                        <a href="#" onclick="document.getElementById('nome').focus()" class="btn btn-primary">
+                            <i class="bi bi-plus-lg"></i>
+                            Cadastrar Primeira Conta
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Tabela Resumo Completa (quando há muitas contas) -->
+    {% if (contas_corrente|length + contas_investimento|length) > 6 %}
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-header bg-transparent border-0">
+            <h4 class="h5 mb-0 d-flex align-items-center text-primary">
+                <div class="icon-container me-2">
+                    <i class="bi bi-table"></i>
+                </div>
+                Todas as Contas - Visão Detalhada
+            </h4>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="border-0 ps-4">Logo</th>
+                            <th class="border-0">Nome</th>
+                            <th class="border-0">Tipo</th>
+                            <th class="border-0">Saldo Inicial</th>
+                            <th class="border-0 text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for conta in contas_corrente + contas_investimento %}
+                        <tr class="table-row-hover">
+                            <td class="ps-4">
+                                {% if conta.logo_imagem %}
+                                    <img src="{{ url_for('static', filename='uploads/' + conta.logo_imagem) }}" 
+                                         alt="Logo {{ conta.nome }}" 
+                                         class="rounded" 
+                                         style="width: 40px; height: 40px; object-fit: cover;">
+                                {% else %}
+                                    <div class="icon-container bg-primary bg-opacity-10 text-primary" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-{% if conta.tipo_conta == 'Investimento' %}graph-up{% else %}bank{% endif %}"></i>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div>
+                                    <div class="fw-semibold">{{ conta.nome }}</div>
+                                    {% if conta.tipo_investimento %}
+                                        <small class="text-muted">{{ conta.tipo_investimento }}</small>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge {% if conta.tipo_conta == 'Investimento' %}bg-success{% else %}bg-primary{% endif %} bg-opacity-10 {% if conta.tipo_conta == 'Investimento' %}text-success{% else %}text-primary{% endif %}">
+                                    <i class="bi bi-{% if conta.tipo_conta == 'Investimento' %}graph-up{% else %}wallet2{% endif %} me-1"></i>
+                                    {{ conta.tipo_conta }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="fw-bold {% if conta.saldo_inicial < 0 %}text-danger{% else %}text-success{% endif %}">
+                                    {{ conta.saldo_inicial | currency }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <a href="{{ url_for('contas_bp.editar_conta', id=conta.id) }}" 
+                                   class="btn btn-outline-primary btn-sm" 
+                                   title="Editar {{ conta.nome }}">
+                                    <i class="bi bi-pencil-fill"></i>
+                                    Editar
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-group-divider">
+                        <tr class="table-light">
+                            <td colspan="3" class="ps-4 fw-bold">Total Contas Corrente:</td>
+                            <td class="fw-bold text-primary">{{ total_corrente | currency }}</td>
+                            <td></td>
+                        </tr>
+                        <tr class="table-light">
+                            <td colspan="3" class="ps-4 fw-bold">Total Investimentos:</td>
+                            <td class="fw-bold text-success">{{ total_investimento | currency }}</td>
+                            <td></td>
+                        </tr>
+                        <tr class="table-primary">
+                            <td colspan="3" class="ps-4 fw-bold text-white">PATRIMÔNIO TOTAL:</td>
+                            <td class="fw-bold text-white fs-5">{{ total_geral | currency }}</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Dicas e Informações -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card border-0 bg-light">
+                <div class="card-body">
+                    <h6 class="text-primary mb-3">
+                        <i class="bi bi-lightbulb me-1"></i>
+                        Dicas para Gerenciar suas Contas
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex">
+                                <div class="icon-container bg-primary bg-opacity-10 text-primary me-3" style="width: 32px; height: 32px;">
+                                    <i class="bi bi-shield-check"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-semibold mb-1">Mantenha Atualizado</h6>
+                                    <small class="text-muted">Atualize regularmente os saldos das suas contas para ter controle preciso.</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex">
+                                <div class="icon-container bg-success bg-opacity-10 text-success me-3" style="width: 32px; height: 32px;">
+                                    <i class="bi bi-graph-up-arrow"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-semibold mb-1">Diversifique</h6>
+                                    <small class="text-muted">Use diferentes tipos de conta para organizar melhor suas finanças.</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex">
+                                <div class="icon-container bg-warning bg-opacity-10 text-warning me-3" style="width: 32px; height: 32px;">
+                                    <i class="bi bi-eye"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-semibold mb-1">Monitore</h6>
+                                    <small class="text-muted">Acompanhe o crescimento do seu patrimônio através do dashboard.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleInvestimento() {
+    var tipoConta = document.getElementById('tipo_conta').value;
+    var campoInvestimento = document.getElementById('campo_tipo_investimento');
+    var inputInvestimento = document.getElementById('tipo_investimento');
+    
+    if (tipoConta === 'Investimento') {
+        campoInvestimento.style.display = 'block';
+        inputInvestimento.required = true;
+    } else {
+        campoInvestimento.style.display = 'none';
+        inputInvestimento.required = false;
+        inputInvestimento.value = '';
+    }
+}
+
+// Animações para os cards de resumo
+document.addEventListener('DOMContentLoaded', function() {
+    const resumoCards = document.querySelectorAll('.resumo-card');
+    resumoCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.classList.add('fade-in');
+    });
+    
+    // Animações para os itens das contas
+    const contaItems = document.querySelectorAll('.conta-item');
+    contaItems.forEach((item, index) => {
+        item.style.animationDelay = `${(index * 0.05) + 0.3}s`;
+        item.classList.add('slide-in');
+    });
+});
+</script>
+
+{% block scripts %}
+<style>
+/* Estilos específicos para a página de contas */
+.contas-container {
+    max-width: 100%;
+}
+
+/* Campos de formulário modernos */
+.form-control-modern, .form-select-modern {
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background: var(--bg-secondary);
+    transition: var(--transition);
+}
+
+.form-control-modern:focus, .form-select-modern:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Header gradiente */
+.bg-gradient {
+    background: var(--gradient-primary) !important;
+}
+
+/* Cards de resumo */
+.resumo-card {
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.resumo-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.corrente-card:hover {
+    border-left: 4px solid var(--primary-color);
+}
+
+.investimento-card:hover {
+    border-left: 4px solid var(--success-color);
+}
+
+.total-card:hover {
+    border-left: 4px solid var(--warning-color);
+}
+
+/* Lista de contas */
+.contas-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.conta-item {
+    padding: 0.75rem 0;
+    transition: var(--transition);
+}
+
+.conta-item:hover {
+    background: var(--bg-light);
+    border-radius: var(--border-radius-sm);
+    padding: 0.75rem;
+    margin: 0 -0.75rem;
+}
+
+.conta-nome {
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.conta-saldo {
+    font-size: 1.1rem;
+}
+
+.conta-actions .btn {
+    opacity: 0.7;
+    transition: var(--transition);
+}
+
+.conta-item:hover .conta-actions .btn {
+    opacity: 1;
+}
+
+/* Tabela moderna */
+.table-row-hover {
+    transition: var(--transition);
+}
+
+.table-row-hover:hover {
+    background: var(--bg-light) !important;
+    transform: scale(1.01);
+}
+
+/* Estado vazio */
+.empty-state {
+    padding: 2rem;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .resumo-card {
+        margin-bottom: 1rem;
+    }
+    
+    .conta-item {
+        padding: 1rem 0;
+    }
+    
+    .conta-item:hover {
+        margin: 0;
+        padding: 1rem;
+    }
+    
+    .conta-logo {
+        margin-right: 1rem !important;
+    }
+    
+    .d-flex.align-items-center {
+        flex-wrap: wrap;
+    }
+    
+    .conta-actions {
+        margin-top: 0.5rem;
+        margin-left: 0 !important;
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    .empty-state {
+        padding: 1rem;
+    }
+    
+    .resumo-card .card-body {
+        padding: 2rem 1rem;
+    }
+}
+
+/* Animações customizadas */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+/* Scrollbar personalizada para lista de contas */
+.contas-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.contas-list::-webkit-scrollbar-track {
+    background: var(--bg-light);
+    border-radius: 2px;
+}
+
+.contas-list::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 2px;
+}
+
+.contas-list::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+}
+</style>
+{% endblock %}
 {% endblock %}

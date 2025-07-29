@@ -1,141 +1,667 @@
 {% extends 'base.html' %}
 
+{% block title %}Cartões de Crédito - {{ super() }}{% endblock %}
+
 {% block content %}
-    <h2>Gestão de Cartões de Crédito</h2>
-    <hr>
-    
-    <div class="card bg-light mb-4">
-        <div class="card-body">
-            <h5 class="card-title">Adicionar Novo Cartão de Crédito</h5>
+<div class="cartoes-container">
+    <!-- Header da Página -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-0 text-primary fw-bold">
+                <i class="bi bi-credit-card me-2"></i>
+                Gestão de Cartões de Crédito
+            </h1>
+            <p class="text-muted mb-0">Gerencie seus cartões de crédito e controle suas faturas</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('cartoes_bp.extrato_cartao') }}" class="btn btn-outline-primary">
+                <i class="bi bi-file-text"></i>
+                Ver Extratos
+            </a>
+            <a href="{{ url_for('dashboard_bp.dashboard') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-speedometer2"></i>
+                Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Formulário de Novo Cartão -->
+    <div class="card shadow-sm mb-5 border-0">
+        <div class="card-header bg-gradient text-white">
+            <h3 class="h5 mb-0 d-flex align-items-center">
+                <div class="icon-container bg-white text-primary me-2">
+                    <i class="bi bi-plus-lg"></i>
+                </div>
+                Adicionar Novo Cartão de Crédito
+            </h3>
+        </div>
+        <div class="card-body p-4">
             <form method="POST" action="{{ url_for('cartoes_bp.gerenciar_cartoes') }}" enctype="multipart/form-data">
-                <div class="row">
-                    <div class="col-md-3 mb-3">
-                        <label for="nome" class="form-label">Nome do Cartão</label>
-                        <input type="text" class="form-control" id="nome" name="nome" required placeholder="Ex: Cartão Nubank">
+                <!-- Campos Básicos -->
+                <div class="row mb-4">
+                    <div class="col-md-4 mb-3">
+                        <label for="nome" class="form-label fw-semibold">
+                            <i class="bi bi-credit-card-fill text-primary"></i>
+                            Nome do Cartão
+                        </label>
+                        <input type="text" class="form-control form-control-modern" id="nome" name="nome" 
+                               placeholder="Ex: Cartão Nubank, Itaú Personnalité..." required>
+                        <small class="text-muted">Nome para identificar o cartão no sistema</small>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <label for="dia_vencimento" class="form-label">Dia de Vencimento</label>
-                        <input type="number" class="form-control" id="dia_vencimento" name="dia_vencimento" min="1" max="31" required placeholder="Ex: 15">
-                        <small class="form-text text-muted">Dia do mês em que a fatura vence</small>
+                    <div class="col-md-4 mb-3">
+                        <label for="dia_vencimento" class="form-label fw-semibold">
+                            <i class="bi bi-calendar-event text-primary"></i>
+                            Dia de Vencimento
+                        </label>
+                        <input type="number" class="form-control form-control-modern" id="dia_vencimento" 
+                               name="dia_vencimento" min="1" max="31" placeholder="15" required>
+                        <small class="text-muted">Dia do mês em que a fatura vence</small>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <label for="conta_pagamento_id" class="form-label">Conta para Pagamento</label>
-                        <select class="form-select" id="conta_pagamento_id" name="conta_pagamento_id">
-                            <option value="">Selecionar depois...</option>
+                    <div class="col-md-4 mb-3">
+                        <label for="conta_pagamento_id" class="form-label fw-semibold">
+                            <i class="bi bi-bank text-primary"></i>
+                            Conta para Pagamento
+                        </label>
+                        <select class="form-select form-control-modern" id="conta_pagamento_id" name="conta_pagamento_id">
+                            <option value="">Definir depois...</option>
                             {% for conta in contas %}
-                                <option value="{{ conta.id }}">{{ conta.nome }}</option>
+                                <option value="{{ conta.id }}">
+                                    {{ conta.nome }}
+                                    {% if conta.tipo_conta %}({{ conta.tipo_conta }}){% endif %}
+                                </option>
                             {% endfor %}
                         </select>
-                        <small class="form-text text-muted">Conta que será debitada no pagamento</small>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <label for="logo_imagem" class="form-label">Logo do Cartão (opcional)</label>
-                        <input class="form-control" type="file" id="logo_imagem" name="logo_imagem" accept="image/*">
+                        <small class="text-muted">Conta que será debitada no pagamento</small>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-credit-card-fill"></i> Salvar Cartão
-                </button>
+
+                <!-- Upload de Logo -->
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3">
+                        <label for="logo_imagem" class="form-label fw-semibold">
+                            <i class="bi bi-image text-primary"></i>
+                            Logo do Cartão (opcional)
+                        </label>
+                        <input class="form-control form-control-modern" type="file" id="logo_imagem" 
+                               name="logo_imagem" accept="image/*">
+                        <small class="text-muted">Formatos aceitos: JPG, PNG, GIF (máx. 2MB)</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="upload-preview">
+                            <div class="preview-placeholder">
+                                <i class="bi bi-image fs-1 text-muted"></i>
+                                <p class="text-muted mb-0">Pré-visualização da logo</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botão de Submissão -->
+                <div class="d-flex justify-content-end pt-3 border-top">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-credit-card-fill"></i>
+                        Salvar Cartão
+                    </button>
+                </div>
             </form>
         </div>
     </div>
 
-    <h3>Meus Cartões de Crédito</h3>
-    
+    <!-- Cards de Cartões -->
     {% if cartoes %}
-        <div class="table-responsive">
-            <table class="table table-striped table-hover align-middle">
-                <thead class="table-dark">
-                    <tr>
-                        <th style="width: 10%;">Logo</th>
-                        <th style="width: 25%;">Nome</th>
-                        <th style="width: 15%;">Vencimento</th>
-                        <th style="width: 25%;">Conta Pagamento</th>
-                        <th style="width: 10%;">Status</th>
-                        <th style="width: 15%; text-align: center;">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for cartao in cartoes %}
-                    <tr>
-                        <td>
-                            {% if cartao.logo_imagem %}
-                                <img src="{{ url_for('static', filename='uploads/' + cartao.logo_imagem) }}" 
-                                     alt="Logo {{ cartao.nome }}" 
-                                     class="img-fluid" 
-                                     style="max-width: 50px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                            {% else %}
-                                <i class="bi bi-credit-card-fill fs-2 text-muted"></i>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <strong>{{ cartao.nome }}</strong>
-                            <br>
-                            <small class="text-muted">Criado em {{ cartao.data_criacao.strftime('%d/%m/%Y') }}</small>
-                        </td>
-                        <td>
-                            <span class="badge bg-info">Dia {{ cartao.dia_vencimento }}</span>
-                        </td>
-                        <td>
-                            {% if cartao.conta_pagamento %}
-                                {% if cartao.conta_pagamento.logo_imagem %}
-                                    <img src="{{ url_for('static', filename='uploads/' + cartao.conta_pagamento.logo_imagem) }}" 
-                                         alt="Logo" style="width: 20px; height: auto; margin-right: 5px; border-radius: 3px;">
-                                {% endif %}
-                                {{ cartao.conta_pagamento.nome }}
-                            {% else %}
-                                <span class="text-muted">
-                                    <i class="bi bi-exclamation-triangle-fill text-warning"></i> Não definida
-                                </span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if cartao.ativo %}
-                                <span class="badge bg-success">Ativo</span>
-                            {% else %}
-                                <span class="badge bg-secondary">Inativo</span>
-                            {% endif %}
-                        </td>
-                        <td style="text-align: center;">
-                            <a href="{{ url_for('cartoes_bp.editar_cartao', id=cartao.id) }}" 
-                               class="btn btn-sm btn-warning me-1" 
-                               title="Editar {{ cartao.nome }}">
-                                <i class="bi bi-pencil-fill"></i>
-                            </a>
-                            {% if cartao.ativo %}
-                                <form action="{{ url_for('cartoes_bp.inativar_cartao', id=cartao.id) }}" 
-                                      method="POST" 
-                                      class="d-inline" 
-                                      onsubmit="return confirm('Tem certeza que deseja inativar o cartão \'{{ cartao.nome }}\'? Esta ação não pode ser desfeita.');">
-                                    <button type="submit" 
-                                            class="btn btn-sm btn-outline-danger" 
-                                            title="Inativar {{ cartao.nome }}">
-                                        <i class="bi bi-x-circle-fill"></i>
-                                    </button>
-                                </form>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% else %}
-        <div class="alert alert-info text-center">
-            <i class="bi bi-credit-card fs-1 text-muted d-block mb-3"></i>
-            <h5>Nenhum cartão de crédito cadastrado</h5>
-            <p class="mb-0">Cadastre seu primeiro cartão usando o formulário acima.</p>
-        </div>
-    {% endif %}
+    <div class="cartoes-grid">
+        {% for cartao in cartoes %}
+        <div class="card cartao-card border-0 shadow-sm">
+            <!-- Header do Cartão -->
+            <div class="card-header cartao-header text-white position-relative overflow-hidden">
+                <div class="cartao-bg-pattern"></div>
+                <div class="d-flex justify-content-between align-items-start position-relative">
+                    <div class="cartao-info">
+                        <h5 class="card-title mb-1 fw-bold">{{ cartao.nome }}</h5>
+                        <small class="opacity-75">
+                            <i class="bi bi-calendar-event me-1"></i>
+                            Vencimento dia {{ cartao.dia_vencimento }}
+                        </small>
+                    </div>
+                    <div class="cartao-logo">
+                        {% if cartao.logo_imagem %}
+                            <img src="{{ url_for('static', filename='uploads/' + cartao.logo_imagem) }}" 
+                                 alt="Logo {{ cartao.nome }}" 
+                                 class="rounded" 
+                                 style="width: 50px; height: 50px; object-fit: cover; border: 2px solid rgba(255,255,255,0.3);">
+                        {% else %}
+                            <div class="icon-container bg-white bg-opacity-20">
+                                <i class="bi bi-credit-card-fill"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
 
-    <div class="mt-4">
-        <div class="alert alert-light">
-            <h6><i class="bi bi-info-circle-fill"></i> Informações importantes:</h6>
-            <ul class="mb-0">
-                <li>O dia de vencimento será usado para gerar automaticamente as faturas mensais no dashboard</li>
-                <li>Cartões inativos não aparecerão nas opções de lançamento</li>
-                <li>Você pode reativar um cartão editando-o (funcionalidade será implementada em breve)</li>
-            </ul>
+            <!-- Corpo do Cartão -->
+            <div class="card-body">
+                <!-- Informações da Conta -->
+                <div class="cartao-details mb-3">
+                    <div class="detail-item">
+                        <i class="bi bi-bank text-primary me-2"></i>
+                        <span class="detail-label">Pagamento:</span>
+                        {% if cartao.conta_pagamento %}
+                            <span class="detail-value">{{ cartao.conta_pagamento.nome }}</span>
+                        {% else %}
+                            <span class="detail-value text-warning">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                Não definida
+                            </span>
+                        {% endif %}
+                    </div>
+                    <div class="detail-item">
+                        <i class="bi bi-calendar-plus text-primary me-2"></i>
+                        <span class="detail-label">Criado em:</span>
+                        <span class="detail-value">{{ cartao.data_criacao.strftime('%d/%m/%Y') }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="bi bi-circle-fill me-2 {% if cartao.ativo %}text-success{% else %}text-secondary{% endif %}"></i>
+                        <span class="detail-label">Status:</span>
+                        <span class="badge {% if cartao.ativo %}bg-success{% else %}bg-secondary{% endif %} bg-opacity-10 {% if cartao.ativo %}text-success{% else %}text-secondary{% endif %}">
+                            {% if cartao.ativo %}
+                                <i class="bi bi-check-circle-fill me-1"></i>Ativo
+                            {% else %}
+                                <i class="bi bi-pause-circle-fill me-1"></i>Inativo
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Ações do Cartão -->
+                <div class="cartao-actions d-flex gap-2">
+                    <a href="{{ url_for('cartoes_bp.editar_cartao', id=cartao.id) }}" 
+                       class="btn btn-outline-primary flex-fill">
+                        <i class="bi bi-pencil-fill"></i>
+                        Editar
+                    </a>
+                    <a href="{{ url_for('cartoes_bp.extrato_cartao', cartao_id=cartao.id) }}" 
+                       class="btn btn-outline-info flex-fill">
+                        <i class="bi bi-file-text"></i>
+                        Extrato
+                    </a>
+                    {% if cartao.ativo %}
+                        <button type="button" 
+                                class="btn btn-outline-danger" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#modalInativarCartao"
+                                data-cartao-id="{{ cartao.id }}"
+                                data-cartao-nome="{{ cartao.nome }}"
+                                title="Inativar cartão">
+                            <i class="bi bi-x-circle"></i>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Estatísticas dos Cartões -->
+    <div class="row mt-5">
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm estatistica-card">
+                <div class="card-body text-center p-4">
+                    <div class="icon-container bg-primary bg-opacity-10 text-primary mx-auto mb-3">
+                        <i class="bi bi-credit-card fs-1"></i>
+                    </div>
+                    <h6 class="text-muted mb-1 text-uppercase small">Total de Cartões</h6>
+                    <h3 class="fw-bold text-primary mb-0">{{ cartoes|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm estatistica-card">
+                <div class="card-body text-center p-4">
+                    <div class="icon-container bg-success bg-opacity-10 text-success mx-auto mb-3">
+                        <i class="bi bi-check-circle fs-1"></i>
+                    </div>
+                    <h6 class="text-muted mb-1 text-uppercase small">Cartões Ativos</h6>
+                    <h3 class="fw-bold text-success mb-0">{{ cartoes|selectattr('ativo')|list|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm estatistica-card">
+                <div class="card-body text-center p-4">
+                    <div class="icon-container bg-warning bg-opacity-10 text-warning mx-auto mb-3">
+                        <i class="bi bi-exclamation-triangle fs-1"></i>
+                    </div>
+                    <h6 class="text-muted mb-1 text-uppercase small">Sem Conta Definida</h6>
+                    <h3 class="fw-bold text-warning mb-0">{{ cartoes|rejectattr('conta_pagamento')|list|length }}</h3>
+                </div>
+            </div>
         </div>
     </div>
+
+    {% else %}
+    <!-- Estado Vazio -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+            <div class="empty-state">
+                <div class="icon-container bg-primary bg-opacity-10 text-primary mx-auto mb-4" style="width: 80px; height: 80px;">
+                    <i class="bi bi-credit-card" style="font-size: 2.5rem;"></i>
+                </div>
+                <h4 class="text-primary mb-3">Nenhum cartão de crédito cadastrado</h4>
+                <p class="text-muted mb-4">
+                    Cadastre seus cartões de crédito para ter um controle completo das suas faturas.
+                    <br>
+                    O sistema ajudará você a acompanhar gastos e vencimentos.
+                </p>
+                <a href="#" onclick="document.getElementById('nome').focus()" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i>
+                    Cadastrar Primeiro Cartão
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Informações e Dicas -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card border-0 bg-light">
+                <div class="card-body">
+                    <h6 class="text-primary mb-3">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Informações Importantes sobre Cartões
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex">
+                                <div class="icon-container bg-primary bg-opacity-10 text-primary me-3" style="width: 32px; height: 32px;">
+                                    <i class="bi bi-calendar-check"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-semibold mb-1">Vencimentos</h6>
+                                    <small class="text-muted">O dia de vencimento será usado para gerar automaticamente as faturas no dashboard.</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex">
+                                <div class="icon-container bg-warning bg-opacity-10 text-warning me-3" style="width: 32px; height: 32px;">
+                                    <i class="bi bi-pause-circle"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-semibold mb-1">Cartões Inativos</h6>
+                                    <small class="text-muted">Cartões inativos não aparecerão nas opções de lançamento, mas manterão o histórico.</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex">
+                                <div class="icon-container bg-success bg-opacity-10 text-success me-3" style="width: 32px; height: 32px;">
+                                    <i class="bi bi-bank"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-semibold mb-1">Conta de Pagamento</h6>
+                                    <small class="text-muted">Defina a conta que será usada para debitar o pagamento das faturas.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Inativar Cartão -->
+<div class="modal fade" id="modalInativarCartao" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title d-flex align-items-center text-warning">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    Inativar Cartão de Crédito
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formInativarCartao" method="POST">
+                <div class="modal-body">
+                    <div class="alert alert-warning border-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Atenção:</strong> Você está prestes a inativar o cartão:
+                    </div>
+                    <div class="text-center py-3">
+                        <div class="icon-container bg-warning bg-opacity-10 text-warning mx-auto mb-3">
+                            <i class="bi bi-credit-card-fill fs-1"></i>
+                        </div>
+                        <h5 id="nomeCartaoModal" class="text-primary"></h5>
+                    </div>
+                    <div class="alert alert-info border-0">
+                        <h6 class="mb-2">O que acontece quando você inativa um cartão:</h6>
+                        <ul class="mb-0 small">
+                            <li>O cartão não aparecerá mais nas opções de novo lançamento</li>
+                            <li>O histórico de lançamentos será preservado</li>
+                            <li>Você pode reativar o cartão a qualquer momento editando-o</li>
+                            <li>Lançamentos futuros agendados continuarão válidos</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg"></i>
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-pause-circle-fill"></i>
+                        Confirmar Inativação
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Preview de upload de imagem
+document.getElementById('logo_imagem').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    const preview = document.querySelector('.upload-preview');
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.innerHTML = `
+                <img src="${e.target.result}" alt="Preview" 
+                     style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px;">
+            `;
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.innerHTML = `
+            <div class="preview-placeholder">
+                <i class="bi bi-image fs-1 text-muted"></i>
+                <p class="text-muted mb-0">Pré-visualização da logo</p>
+            </div>
+        `;
+    }
+});
+
+// Modal de inativação
+document.addEventListener('DOMContentLoaded', function() {
+    const modalInativar = document.getElementById('modalInativarCartao');
+    if (modalInativar) {
+        modalInativar.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const cartaoId = button.getAttribute('data-cartao-id');
+            const cartaoNome = button.getAttribute('data-cartao-nome');
+            
+            document.getElementById('nomeCartaoModal').textContent = cartaoNome;
+            document.getElementById('formInativarCartao').action = `/cartoes/inativar/${cartaoId}`;
+        });
+    }
+    
+    // Animações dos cartões
+    const cartaoCards = document.querySelectorAll('.cartao-card');
+    cartaoCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.classList.add('fade-in');
+    });
+    
+    // Animações das estatísticas
+    const estatisticaCards = document.querySelectorAll('.estatistica-card');
+    estatisticaCards.forEach((card, index) => {
+        card.style.animationDelay = `${(index * 0.1) + 0.3}s`;
+        card.classList.add('slide-in');
+    });
+});
+</script>
+
+{% block scripts %}
+<style>
+/* Estilos específicos para a página de cartões */
+.cartoes-container {
+    max-width: 100%;
+}
+
+/* Campos de formulário modernos */
+.form-control-modern, .form-select-modern {
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background: var(--bg-secondary);
+    transition: var(--transition);
+}
+
+.form-control-modern:focus, .form-select-modern:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Header gradiente */
+.bg-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+/* Preview de upload */
+.upload-preview {
+    height: 150px;
+    border: 2px dashed var(--border-color);
+    border-radius: var(--border-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-light);
+    transition: var(--transition);
+}
+
+.upload-preview:hover {
+    border-color: var(--primary-color);
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.preview-placeholder {
+    text-align: center;
+    padding: 2rem;
+}
+
+/* Grid de cartões */
+.cartoes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+/* Cards de cartão */
+.cartao-card {
+    transition: var(--transition);
+    overflow: hidden;
+}
+
+.cartao-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-xl);
+}
+
+/* Header do cartão */
+.cartao-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    position: relative;
+    padding: 1.5rem;
+    min-height: 120px;
+}
+
+.cartao-bg-pattern {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(30%, -30%);
+}
+
+.cartao-bg-pattern::before {
+    content: '';
+    position: absolute;
+    top: 40px;
+    left: -20px;
+    width: 60px;
+    height: 60px;
+    background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+/* Detalhes no corpo do cartão */
+.cartao-details {
+    border-radius: var(--border-radius-sm);
+    background: var(--bg-light);
+    padding: 1rem;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    font-size: 0.875rem;
+}
+
+.detail-item:last-child {
+    margin-bottom: 0;
+}
+
+.detail-label {
+    font-weight: 500;
+    margin-right: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.detail-value {
+    color: var(--text-primary);
+}
+
+/* Ações do cartão */
+.cartao-actions .btn {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+}
+
+/* Cards de estatística */
+.estatistica-card {
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.estatistica-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Estado vazio */
+.empty-state {
+    padding: 2rem;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .cartoes-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .cartao-header {
+        padding: 1rem;
+        min-height: 100px;
+    }
+    
+    .cartao-actions {
+        flex-direction: column;
+    }
+    
+    .cartao-actions .btn {
+        margin-bottom: 0.5rem;
+    }
+    
+    .cartao-actions .btn:last-child {
+        margin-bottom: 0;
+    }
+    
+    .detail-item {
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+    
+    .detail-label, .detail-value {
+        flex-basis: 100%;
+        margin-right: 0;
+    }
+    
+    .detail-value {
+        margin-top: 0.25rem;
+        margin-left: 1.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    .empty-state {
+        padding: 1rem;
+    }
+    
+    .cartao-details {
+        padding: 0.75rem;
+    }
+    
+    .d-flex.gap-2 {
+        flex-direction: column;
+        gap: 0.5rem !important;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+}
+
+/* Animações específicas */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.slide-in-up {
+    animation: slideInUp 0.6s ease-out forwards;
+}
+
+/* Cores específicas para diferentes elementos */
+.text-purple {
+    color: #6f42c1 !important;
+}
+
+.bg-purple {
+    background-color: #6f42c1 !important;
+}
+
+/* Hover effects para os botões de ação */
+.cartao-actions .btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Estilo especial para cartões inativos */
+.cartao-card[data-inativo="true"] {
+    opacity: 0.7;
+}
+
+.cartao-card[data-inativo="true"] .cartao-header {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+}
+</style>
+{% endblock %}
 {% endblock %}

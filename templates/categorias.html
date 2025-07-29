@@ -1,96 +1,882 @@
 {% extends 'base.html' %}
 
+{% block title %}Categorias - {{ super() }}{% endblock %}
+
 {% block content %}
-<div class="row">
-    <div class="col-md-4">
-        <h2>Adicionar Categoria</h2>
-        <hr>
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <form action="{{ url_for('categorias_bp.gerenciar_categorias') }}" method="POST">
-                    <input type="hidden" name="form_type" value="categoria">
-                    <div class="mb-3">
-                        <label for="nome_cat" class="form-label">Nome da Categoria</label>
-                        <input type="text" class="form-control" id="nome_cat" name="nome" required>
+<div class="categorias-container">
+    <!-- Header da Página -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-0 text-primary fw-bold">
+                <i class="bi bi-tags me-2"></i>
+                Gestão de Categorias
+            </h1>
+            <p class="text-muted mb-0">Organize seus lançamentos com categorias e subcategorias personalizadas</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('lancamentos_bp.gerenciar_lancamentos') }}" class="btn btn-outline-primary">
+                <i class="bi bi-journal-plus"></i>
+                Novo Lançamento
+            </a>
+            <a href="{{ url_for('dashboard_bp.dashboard') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-speedometer2"></i>
+                Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Formulário de Nova Categoria -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm border-0 sticky-top" style="top: 2rem;">
+                <div class="card-header bg-gradient text-white">
+                    <h3 class="h5 mb-0 d-flex align-items-center">
+                        <div class="icon-container bg-white text-primary me-2">
+                            <i class="bi bi-plus-lg"></i>
+                        </div>
+                        Nova Categoria
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <form action="{{ url_for('categorias_bp.gerenciar_categorias') }}" method="POST">
+                        <input type="hidden" name="form_type" value="categoria">
+                        
+                        <!-- Nome da Categoria -->
+                        <div class="mb-4">
+                            <label for="nome_cat" class="form-label fw-semibold">
+                                <i class="bi bi-tag text-primary"></i>
+                                Nome da Categoria
+                            </label>
+                            <input type="text" class="form-control form-control-modern" id="nome_cat" 
+                                   name="nome" placeholder="Ex: Alimentação, Transporte..." required>
+                        </div>
+                        
+                        <!-- Cor da Categoria -->
+                        <div class="mb-4">
+                            <label for="cor" class="form-label fw-semibold">
+                                <i class="bi bi-palette text-primary"></i>
+                                Cor da Categoria
+                            </label>
+                            <div class="color-input-container">
+                                <input type="color" class="form-control form-control-color" id="cor" 
+                                       name="cor" value="#667eea" title="Escolha uma cor">
+                                <div class="color-preview" id="colorPreview"></div>
+                            </div>
+                            <small class="text-muted">A cor será usada para identificar a categoria nos relatórios</small>
+                        </div>
+                        
+                        <!-- Ícone da Categoria -->
+                        <div class="mb-4">
+                            <label for="icone" class="form-label fw-semibold">
+                                <i class="bi bi-emoji-smile text-primary"></i>
+                                Ícone da Categoria
+                            </label>
+                            <div class="input-group">
+                                <input type="text" class="form-control form-control-modern" id="icone" 
+                                       name="icone" value="bi-tag-fill" placeholder="bi-tag-fill">
+                                <button class="btn btn-outline-secondary" type="button" 
+                                        data-bs-toggle="modal" data-bs-target="#modalIcones">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                            <div class="icon-preview mt-2">
+                                <i id="iconPreview" class="bi bi-tag-fill fs-3" style="color: #667eea;"></i>
+                                <small class="text-muted ms-2">Pré-visualização</small>
+                            </div>
+                            <small class="text-muted">
+                                Use classes do <a href="https://icons.getbootstrap.com/" target="_blank" class="text-decoration-none">Bootstrap Icons</a>
+                            </small>
+                        </div>
+
+                        <!-- Botão Salvar -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-lg"></i>
+                                Criar Categoria
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Categorias -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="h5 mb-0 text-primary">
+                                <i class="bi bi-list-ul me-1"></i>
+                                Suas Categorias
+                            </h3>
+                            <p class="text-muted mb-0 small">{{ categorias|length }} categoria(s) cadastrada(s)</p>
+                        </div>
+                        <div class="view-toggle">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <input type="radio" class="btn-check" name="viewMode" id="gridView" checked>
+                                <label class="btn btn-outline-primary" for="gridView">
+                                    <i class="bi bi-grid-3x3"></i>
+                                </label>
+                                <input type="radio" class="btn-check" name="viewMode" id="listView">
+                                <label class="btn btn-outline-primary" for="listView">
+                                    <i class="bi bi-list"></i>
+                                </label>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="cor" class="form-label">Cor</label>
-                        <input type="color" class="form-control form-control-color" id="cor" name="cor" value="#808080" title="Escolha uma cor">
-                    </div>
-                    <div class="mb-3">
-                        <label for="icone" class="form-label">Ícone</label>
-                        <input type="text" class="form-control" id="icone" name="icone" value="bi-tag-fill" placeholder="Ex: bi-house-door-fill">
-                        <small class="form-text text-muted">Use classes do <a href="https://icons.getbootstrap.com/" target="_blank">Bootstrap Icons</a>.</small>
-                    </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">Salvar Categoria</button>
-                    </div>
-                </form>
+                </div>
+                <div class="card-body">
+                    {% if categorias %}
+                        <!-- Vista em Grid (padrão) -->
+                        <div id="gridViewContent" class="categorias-grid">
+                            {% for categoria in categorias %}
+                            <div class="categoria-card">
+                                <div class="categoria-header" style="background: linear-gradient(135deg, {{ categoria.cor }}22 0%, {{ categoria.cor }}44 100%); border-left: 4px solid {{ categoria.cor }};">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="categoria-info">
+                                            <div class="categoria-icon mb-2">
+                                                <i class="{{ categoria.icone }} fs-2" style="color: {{ categoria.cor }};"></i>
+                                            </div>
+                                            <h5 class="categoria-nome mb-1">{{ categoria.nome }}</h5>
+                                            <small class="text-muted">{{ categoria.subcategorias|length }} subcategoria(s)</small>
+                                        </div>
+                                        <div class="categoria-actions">
+                                            <div class="dropdown">
+                                                <button class="btn btn-outline-secondary btn-sm" type="button" 
+                                                        data-bs-toggle="dropdown">
+                                                    <i class="bi bi-three-dots-vertical"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <a class="dropdown-item" href="{{ url_for('categorias_bp.editar_categoria', id=categoria.id) }}">
+                                                            <i class="bi bi-pencil me-2"></i>Editar Categoria
+                                                        </a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        <button class="dropdown-item text-danger" 
+                                                                onclick="confirmarExclusao('categoria', '{{ categoria.nome }}', '{{ url_for('categorias_bp.deletar_categoria', id=categoria.id) }}')">
+                                                            <i class="bi bi-trash me-2"></i>Excluir Categoria
+                                                        </button>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="categoria-body">
+                                    <!-- Subcategorias -->
+                                    <div class="subcategorias-list">
+                                        {% for sub in categoria.subcategorias|sort(attribute='nome') %}
+                                        <div class="subcategoria-item">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div class="subcategoria-info">
+                                                    <i class="bi bi-arrow-return-right text-muted me-2"></i>
+                                                    <span>{{ sub.nome }}</span>
+                                                </div>
+                                                <div class="subcategoria-actions">
+                                                    <a href="{{ url_for('categorias_bp.editar_subcategoria', id=sub.id) }}" 
+                                                       class="btn btn-outline-primary btn-sm">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                    <button class="btn btn-outline-danger btn-sm" 
+                                                            onclick="confirmarExclusao('subcategoria', '{{ sub.nome }}', '{{ url_for('categorias_bp.deletar_subcategoria', id=sub.id) }}')">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <!-- Formulário de Nova Subcategoria -->
+                                    <div class="nova-subcategoria mt-3">
+                                        <form action="{{ url_for('categorias_bp.gerenciar_categorias') }}" method="POST" 
+                                              class="d-flex gap-2">
+                                            <input type="hidden" name="form_type" value="subcategoria">
+                                            <input type="hidden" name="categoria_id" value="{{ categoria.id }}">
+                                            <input type="text" name="nome" class="form-control form-control-sm" 
+                                                   placeholder="Nova subcategoria..." required>
+                                            <button type="submit" class="btn btn-primary btn-sm">
+                                                <i class="bi bi-plus-lg"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Vista em Lista -->
+                        <div id="listViewContent" class="categorias-lista" style="display: none;">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="border-0">Categoria</th>
+                                            <th class="border-0">Subcategorias</th>
+                                            <th class="border-0 text-center">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for categoria in categorias %}
+                                        <tr class="categoria-row">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="icon-container me-3" style="background-color: {{ categoria.cor }}15; color: {{ categoria.cor }};">
+                                                        <i class="{{ categoria.icone }}"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="mb-0 fw-semibold">{{ categoria.nome }}</h6>
+                                                        <small class="text-muted">{{ categoria.subcategorias|length }} subcategoria(s)</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="subcategorias-tags">
+                                                    {% for sub in categoria.subcategorias|sort(attribute='nome') %}
+                                                        <span class="badge bg-light text-dark me-1 mb-1">{{ sub.nome }}</span>
+                                                    {% endfor %}
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{{ url_for('categorias_bp.editar_categoria', id=categoria.id) }}" 
+                                                       class="btn btn-outline-primary">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                    <button class="btn btn-outline-danger" 
+                                                            onclick="confirmarExclusao('categoria', '{{ categoria.nome }}', '{{ url_for('categorias_bp.deletar_categoria', id=categoria.id) }}')">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    {% else %}
+                        <!-- Estado Vazio -->
+                        <div class="empty-state text-center py-5">
+                            <div class="icon-container bg-primary bg-opacity-10 text-primary mx-auto mb-4" style="width: 80px; height: 80px;">
+                                <i class="bi bi-tags" style="font-size: 2.5rem;"></i>
+                            </div>
+                            <h4 class="text-primary mb-3">Nenhuma categoria cadastrada</h4>
+                            <p class="text-muted mb-4">
+                                Categorias ajudam você a organizar e analisar seus gastos.
+                                <br>
+                                Crie sua primeira categoria usando o formulário ao lado.
+                            </p>
+                            <button class="btn btn-primary" onclick="document.getElementById('nome_cat').focus()">
+                                <i class="bi bi-plus-lg"></i>
+                                Criar Primeira Categoria
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-8">
-        <h2>Minhas Categorias</h2>
-        <hr>
-        <table class="table table-hover align-middle">
-            <tbody>
-                {% for categoria in categorias %}
-                <tr class="table-light">
-                    <td style="width: 5%;">
-                        <i class="{{ categoria.icone }} fs-4" style="color: {{ categoria.cor }};"></i>
-                    </td>
-                    <td class="fw-bold fs-5">
-                        {{ categoria.nome }}
-                    </td>
-                    <td class="text-end">
-                        <a href="{{ url_for('categorias_bp.editar_categoria', id=categoria.id) }}" class="btn btn-sm btn-outline-primary" title="Editar Categoria {{ categoria.nome }}">
-                            <i class="bi bi-pencil-fill"></i>
-                        </a>
-                        <form action="{{ url_for('categorias_bp.deletar_categoria', id=categoria.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja deletar a categoria \'{{ categoria.nome }}\' e TODAS as suas subcategorias?');">
-                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Deletar Categoria {{ categoria.nome }}">
-                                <i class="bi bi-trash-fill"></i>
-                            </button>
-                        </form>
-                    </td>
-                </tr>
+    <!-- Estatísticas das Categorias -->
+    {% if categorias %}
+    <div class="row mt-5">
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm estatistica-card">
+                <div class="card-body text-center p-4">
+                    <div class="icon-container bg-primary bg-opacity-10 text-primary mx-auto mb-3">
+                        <i class="bi bi-tags fs-1"></i>
+                    </div>
+                    <h6 class="text-muted mb-1 text-uppercase small">Total Categorias</h6>
+                    <h3 class="fw-bold text-primary mb-0">{{ categorias|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm estatistica-card">
+                <div class="card-body text-center p-4">
+                    <div class="icon-container bg-success bg-opacity-10 text-success mx-auto mb-3">
+                        <i class="bi bi-arrow-return-right fs-1"></i>
+                    </div>
+                    <h6 class="text-muted mb-1 text-uppercase small">Total Subcategorias</h6>
+                    <h3 class="fw-bold text-success mb-0">{{ categorias|sum(attribute='subcategorias')|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm estatistica-card">
+                <div class="card-body text-center p-4">
+                    <div class="icon-container bg-warning bg-opacity-10 text-warning mx-auto mb-3">
+                        <i class="bi bi-graph-up fs-1"></i>
+                    </div>
+                    <h6 class="text-muted mb-1 text-uppercase small">Média Subcategorias</h6>
+                    <h3 class="fw-bold text-warning mb-0">{{ "%.1f"|format((categorias|sum(attribute='subcategorias')|length / categorias|length) if categorias|length > 0 else 0) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm estatistica-card">
+                <div class="card-body text-center p-4">
+                    <div class="icon-container bg-info bg-opacity-10 text-info mx-auto mb-3">
+                        <i class="bi bi-palette fs-1"></i>
+                    </div>
+                    <h6 class="text-muted mb-1 text-uppercase small">Cores Únicas</h6>
+                    <h3 class="fw-bold text-info mb-0">{{ categorias|map(attribute='cor')|unique|list|length }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
-                {% for sub in categoria.subcategorias|sort(attribute='nome') %}
-                <tr>
-                    <td></td> <td>{{ sub.nome }}</td>
-                    <td class="text-end">
-                        <a href="{{ url_for('categorias_bp.editar_subcategoria', id=sub.id) }}" class="btn btn-sm btn-outline-primary" title="Editar Subcategoria">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                        <form action="{{ url_for('categorias_bp.deletar_subcategoria', id=sub.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja deletar a subcategoria \'{{ sub.nome }}\'?');">
-                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Deletar Subcategoria">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-
-                <tr>
-                    <td></td>
-                    <td colspan="2">
-                        <form action="{{ url_for('categorias_bp.gerenciar_categorias') }}" method="POST" class="d-flex">
-                            <input type="hidden" name="form_type" value="subcategoria">
-                            <input type="hidden" name="categoria_id" value="{{ categoria.id }}">
-                            <input type="text" name="nome" class="form-control form-control-sm me-2" placeholder="Adicionar nova subcategoria para {{ categoria.nome }}" required>
-                            <button type="submit" class="btn btn-sm btn-success">
-                                <i class="bi bi-plus-lg"></i> Adicionar
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="3">Nenhuma categoria cadastrada ainda.</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- Dicas -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card border-0 bg-light">
+                <div class="card-body">
+                    <h6 class="text-primary mb-3">
+                        <i class="bi bi-lightbulb me-1"></i>
+                        Dicas para Organizar suas Categorias
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex">
+                                <div class="icon-container bg-primary bg-opacity-10 text-primary me-3" style="width: 32px; height: 32px;">
+                                    <i class="bi bi-palette"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-semibold mb-1">Use Cores Distintas</h6>
+                                    <small class="text-muted">Escolha cores diferentes para facilitar a identificação visual nos relatórios.</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex">
+                                <div class="icon-container bg-success bg-opacity-10 text-success me-3" style="width: 32px; height: 32px;">
+                                    <i class="bi bi-arrow-return-right"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-semibold mb-1">Subcategorias Específicas</h6>
+                                    <small class="text-muted">Crie subcategorias específicas para ter controle detalhado dos gastos.</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex">
+                                <div class="icon-container bg-warning bg-opacity-10 text-warning me-3" style="width: 32px; height: 32px;">
+                                    <i class="bi bi-emoji-smile"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-semibold mb-1">Ícones Intuitivos</h6>
+                                    <small class="text-muted">Escolha ícones que representem bem o tipo de gasto da categoria.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<!-- Modal de Seleção de Ícones -->
+<div class="modal fade" id="modalIcones" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-search me-2"></i>
+                    Escolher Ícone
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <input type="text" class="form-control" id="searchIcon" placeholder="Pesquisar ícone...">
+                    </div>
+                </div>
+                <div class="icons-grid" id="iconsGrid">
+                    <!-- Ícones populares para categorias financeiras -->
+                    <div class="icon-option" data-icon="bi-house-door-fill" title="Casa/Moradia">
+                        <i class="bi bi-house-door-fill"></i>
+                        <small>Casa</small>
+                    </div>
+                    <div class="icon-option" data-icon="bi-car-front-fill" title="Transporte">
+                        <i class="bi bi-car-front-fill"></i>
+                        <small>Transporte</small>
+                    </div>
+                    <div class="icon-option" data-icon="bi-basket-fill" title="Alimentação">
+                        <i class="bi bi-basket-fill"></i>
+                        <small>Alimentação</small>
+                    </div>
+                    <div class="icon-option" data-icon="bi-heart-pulse-fill" title="Saúde">
+                        <i class="bi bi-heart-pulse-fill"></i>
+                        <small>Saúde</small>
+                    </div>
+                    <div class="icon-option" data-icon="bi-book-fill" title="Educação">
+                        <i class="bi bi-book-fill"></i>
+                        <small>Educação</small>
+                    </div>
+                    <div class="icon-option" data-icon="bi-controller" title="Entretenimento">
+                        <i class="bi bi-controller"></i>
+                        <small>Lazer</small>
+                    </div>
+                    <div class="icon-option" data-icon="bi-bag-fill" title="Compras">
+                        <i class="bi bi-bag-fill"></i>
+                        <small>Compras</small>
+                    </div>
+                    <div class="icon-option" data-icon="bi-phone-fill" title="Telefone">
+                        <i class="bi bi-phone-fill"></i>
+                        <small>Telefone</small>
+                    </div>
+                    <div class="icon-option" data-icon="bi-lightning-charge-fill" title="Energia">
+                        <i class="bi bi-lightning-charge-fill"></i>
+                        <small>Energia</small>
+                    </div>
+                    <div class="icon-option" data-icon="bi-droplet-fill" title="Água">
+                        <i class="bi bi-droplet-fill"></i>
+                        <small>Água</small>
+                    </div>
+                    <div class="icon-option" data-icon="bi-wifi" title="Internet">
+                        <i class="bi bi-wifi"></i>
+                        <small>Internet</small>
+                    </div>
+                    <div class="icon-option" data-icon="bi-piggy-bank-fill" title="Poupança">
+                        <i class="bi bi-piggy-bank-fill"></i>
+                        <small>Poupança</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="modalConfirmarExclusao" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    Confirmar Exclusão
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning border-0">
+                    <p class="mb-0">Você está prestes a excluir <strong id="tipoItem"></strong>:</p>
+                </div>
+                <div class="text-center py-3">
+                    <h5 id="nomeItem" class="text-primary"></h5>
+                </div>
+                <div class="alert alert-danger border-0">
+                    <h6 class="mb-2">⚠️ Atenção:</h6>
+                    <ul class="mb-0 small">
+                        <li>Esta ação não pode ser desfeita</li>
+                        <li id="avisoCategoria" style="display: none;">Todas as subcategorias também serão excluídas</li>
+                        <li>Lançamentos que usam esta categoria ficarão sem categoria</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg"></i>
+                    Cancelar
+                </button>
+                <form id="formExclusao" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash-fill"></i>
+                        Confirmar Exclusão
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Atualização de previews em tempo real
+document.addEventListener('DOMContentLoaded', function() {
+    const corInput = document.getElementById('cor');
+    const iconeInput = document.getElementById('icone');
+    const colorPreview = document.getElementById('colorPreview');
+    const iconPreview = document.getElementById('iconPreview');
+    
+    // Preview da cor
+    function updateColorPreview() {
+        const cor = corInput.value;
+        colorPreview.style.backgroundColor = cor;
+        iconPreview.style.color = cor;
+    }
+    
+    // Preview do ícone
+    function updateIconPreview() {
+        const icone = iconeInput.value;
+        iconPreview.className = `bi ${icone} fs-3`;
+    }
+    
+    corInput.addEventListener('input', updateColorPreview);
+    iconeInput.addEventListener('input', updateIconPreview);
+    
+    // Inicializar previews
+    updateColorPreview();
+    updateIconPreview();
+    
+    // Toggle entre views
+    document.getElementById('gridView').addEventListener('change', function() {
+        if (this.checked) {
+            document.getElementById('gridViewContent').style.display = 'block';
+            document.getElementById('listViewContent').style.display = 'none';
+        }
+    });
+    
+    document.getElementById('listView').addEventListener('change', function() {
+        if (this.checked) {
+            document.getElementById('gridViewContent').style.display = 'none';
+            document.getElementById('listViewContent').style.display = 'block';
+        }
+    });
+    
+    // Seleção de ícones
+    document.querySelectorAll('.icon-option').forEach(option => {
+        option.addEventListener('click', function() {
+            const icon = this.getAttribute('data-icon');
+            document.getElementById('icone').value = icon;
+            updateIconPreview();
+            bootstrap.Modal.getInstance(document.getElementById('modalIcones')).hide();
+        });
+    });
+    
+    // Pesquisa de ícones
+    document.getElementById('searchIcon').addEventListener('input', function() {
+        const search = this.value.toLowerCase();
+        document.querySelectorAll('.icon-option').forEach(option => {
+            const title = option.getAttribute('title').toLowerCase();
+            const text = option.querySelector('small').textContent.toLowerCase();
+            if (title.includes(search) || text.includes(search)) {
+                option.style.display = 'flex';
+            } else {
+                option.style.display = 'none';
+            }
+        });
+    });
+});
+
+// Função para confirmar exclusão
+function confirmarExclusao(tipo, nome, url) {
+    document.getElementById('tipoItem').textContent = tipo;
+    document.getElementById('nomeItem').textContent = nome;
+    document.getElementById('formExclusao').action = url;
+    
+    if (tipo === 'categoria') {
+        document.getElementById('avisoCategoria').style.display = 'block';
+    } else {
+        document.getElementById('avisoCategoria').style.display = 'none';
+    }
+    
+    new bootstrap.Modal(document.getElementById('modalConfirmarExclusao')).show();
+}
+</script>
+
+{% block scripts %}
+<style>
+/* Estilos específicos para a página de categorias */
+.categorias-container {
+    max-width: 100%;
+}
+
+/* Campos de formulário modernos */
+.form-control-modern {
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background: var(--bg-secondary);
+    transition: var(--transition);
+}
+
+.form-control-modern:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Header gradiente */
+.bg-gradient {
+    background: var(--gradient-primary) !important;
+}
+
+/* Input de cor personalizado */
+.color-input-container {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.form-control-color {
+    width: 60px;
+    height: 45px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+}
+
+.color-preview {
+    width: 45px;
+    height: 45px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background: #667eea;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.color-preview::after {
+    content: '✓';
+    color: white;
+    font-weight: bold;
+    text-shadow: 0 0 3px rgba(0,0,0,0.5);
+}
+
+/* Preview do ícone */
+.icon-preview {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    background: var(--bg-light);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--border-color);
+}
+
+/* Grid de categorias */
+.categorias-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Card de categoria */
+.categoria-card {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--bg-secondary);
+    transition: var(--transition);
+    overflow: hidden;
+}
+
+.categoria-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.categoria-header {
+    padding: 1.5rem;
+    position: relative;
+}
+
+.categoria-nome {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.categoria-body {
+    padding: 1rem 1.5rem 1.5rem;
+}
+
+/* Lista de subcategorias */
+.subcategorias-list {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+}
+
+.subcategoria-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.subcategoria-item:last-child {
+    border-bottom: none;
+}
+
+.subcategoria-item:hover {
+    background: var(--bg-light);
+    border-radius: var(--border-radius-sm);
+    margin: 0 -0.5rem;
+    padding: 0.5rem;
+}
+
+.subcategoria-actions {
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.subcategoria-item:hover .subcategoria-actions {
+    opacity: 1;
+}
+
+/* Nova subcategoria */
+.nova-subcategoria {
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+}
+
+/* Modal de ícones */
+.icons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.icon-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background: var(--bg-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+}
+
+.icon-option:hover {
+    border-color: var(--primary-color);
+    background: rgba(99, 102, 241, 0.05);
+    transform: translateY(-2px);
+}
+
+.icon-option i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.icon-option small {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* Vista em lista */
+.categoria-row {
+    transition: var(--transition);
+}
+
+.categoria-row:hover {
+    background: var(--bg-light) !important;
+    transform: scale(1.01);
+}
+
+.subcategorias-tags {
+    max-height: 60px;
+    overflow-y: auto;
+}
+
+/* Cards de estatística */
+.estatistica-card {
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.estatistica-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Estado vazio */
+.empty-state {
+    padding: 2rem;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .categorias-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .categoria-header {
+        padding: 1rem;
+    }
+    
+    .categoria-body {
+        padding: 0.75rem 1rem 1rem;
+    }
+    
+    .icons-grid {
+        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+        gap: 0.5rem;
+    }
+    
+    .icon-option {
+        padding: 0.75rem 0.5rem;
+    }
+    
+    .d-flex.gap-2 {
+        flex-direction: column;
+        gap: 0.5rem !important;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .col-lg-4 {
+        order: 2;
+        margin-top: 2rem;
+    }
+    
+    .col-lg-8 {
+        order: 1;
+    }
+    
+    .categoria-actions .dropdown-menu {
+        right: 0;
+        left: auto;
+    }
+    
+    .subcategoria-actions {
+        opacity: 1;
+    }
+}
+
+/* Scrollbar personalizada */
+.subcategorias-list::-webkit-scrollbar,
+.icons-grid::-webkit-scrollbar {
+    width: 4px;
+}
+
+.subcategorias-list::-webkit-scrollbar-track,
+.icons-grid::-webkit-scrollbar-track {
+    background: var(--bg-light);
+    border-radius: 2px;
+}
+
+.subcategorias-list::-webkit-scrollbar-thumb,
+.icons-grid::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 2px;
+}
+
+/* Sticky sidebar */
+@media (min-width: 992px) {
+    .sticky-top {
+        position: sticky !important;
+        z-index: 1020;
+    }
+}
+</style>
+{% endblock %}
 {% endblock %}

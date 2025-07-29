@@ -1,166 +1,310 @@
 {% extends 'base.html' %}
 
+{% block title %}Extrato do Cartão - {{ super() }}{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-credit-card-fill"></i> Extrato do Cartão de Crédito</h2>
-    <a href="{{ url_for('cartoes_bp.gerenciar_cartoes') }}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left"></i> Voltar aos Cartões
-    </a>
-</div>
-
-<!-- Filtros -->
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <form method="GET" action="{{ url_for('cartoes_bp.extrato_cartao') }}" class="row g-3 align-items-end">
-            <div class="col-md-4">
-                <label for="cartao_id" class="form-label fw-bold">Cartão:</label>
-                <select name="cartao_id" id="cartao_id" class="form-select" required>
-                    <option value="">Selecione um cartão...</option>
-                    {% for cartao in cartoes %}
-                        <option value="{{ cartao.id }}" {% if cartao_id == cartao.id %}selected{% endif %}>
-                            {{ cartao.nome }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label for="mes" class="form-label fw-bold">Mês:</label>
-                <select name="mes" id="mes" class="form-select">
-                    {% for m in meses_disponiveis %}
-                        <option value="{{ m.id }}" {% if m.id == mes %}selected{% endif %}>{{ m.nome }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label for="ano" class="form-label fw-bold">Ano:</label>
-                <select name="ano" id="ano" class="form-select">
-                    {% for a in anos_disponiveis %}
-                        <option value="{{ a }}" {% if a == ano %}selected{% endif %}>{{ a }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-search"></i> Filtrar
-                </button>
-            </div>
-        </form>
+<div class="extrato-container">
+    <!-- Header da Página -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-0 text-primary fw-bold">
+                <i class="bi bi-credit-card me-2"></i>
+                Extrato do Cartão de Crédito
+            </h1>
+            <p class="text-muted mb-0">Visualize e gerencie os lançamentos dos seus cartões</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('cartoes_bp.gerenciar_cartoes') }}" class="btn btn-outline-primary">
+                <i class="bi bi-credit-card-fill"></i>
+                Gerenciar Cartões
+            </a>
+            <a href="{{ url_for('dashboard_bp.dashboard') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-speedometer2"></i>
+                Dashboard
+            </a>
+        </div>
     </div>
-</div>
 
-{% if cartao_selecionado %}
-<!-- Cabeçalho do Extrato -->
-<div class="card shadow-sm mb-4">
-    <div class="card-header bg-primary text-white">
-        <div class="row align-items-center">
-            <div class="col-md-6">
-                <h5 class="mb-0">
-                    {% if cartao_selecionado.logo_imagem %}
-                        <img src="{{ url_for('static', filename='uploads/' + cartao_selecionado.logo_imagem) }}" 
-                             alt="Logo" style="width: 30px; height: auto; margin-right: 10px; border-radius: 5px;">
-                    {% endif %}
-                    {{ cartao_selecionado.nome }}
-                </h5>
-                <small>
-                    Vencimento: Dia {{ cartao_selecionado.dia_vencimento }} | 
-                    Período: {{ meses_disponiveis[mes-1].nome }} de {{ ano }}
-                </small>
-            </div>
-            <div class="col-md-6 text-end">
-                <h4 class="mb-0">Total: {{ total_mes | currency }}</h4>
-                <small>{{ lancamentos|length }} lançamento(s)</small>
-                
-                <!-- Botão para marcar fatura como paga -->
-                <div class="mt-2">
-                    <form action="{{ url_for('cartoes_bp.marcar_fatura_mes_paga', cartao_id=cartao_id, ano=ano, mes=mes) }}" method="POST" class="d-inline">
-                        {% set fatura_paga = cartao_selecionado.fatura_paga_mes(ano, mes) %}
-                        {% if fatura_paga %}
-                            <button type="submit" class="btn btn-success btn-sm">
-                                <i class="bi bi-check-circle-fill"></i> Fatura Paga
-                            </button>
-                        {% else %}
-                            <button type="submit" class="btn btn-outline-light btn-sm">
-                                <i class="bi bi-circle"></i> Marcar como Paga
-                            </button>
-                        {% endif %}
-                    </form>
+    <!-- Filtros Modernizados -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-gradient text-white">
+            <h3 class="h6 mb-0 d-flex align-items-center">
+                <div class="icon-container bg-white text-primary me-2">
+                    <i class="bi bi-funnel"></i>
+                </div>
+                Filtros do Extrato
+            </h3>
+        </div>
+        <div class="card-body p-4">
+            <form method="GET" action="{{ url_for('cartoes_bp.extrato_cartao') }}" class="row g-3">
+                <div class="col-md-4">
+                    <label for="cartao_id" class="form-label fw-semibold">
+                        <i class="bi bi-credit-card text-primary"></i>
+                        Cartão de Crédito
+                    </label>
+                    <select name="cartao_id" id="cartao_id" class="form-select form-control-modern" required>
+                        <option value="">Selecione um cartão...</option>
+                        {% for cartao in cartoes %}
+                            <option value="{{ cartao.id }}" {% if cartao_id == cartao.id %}selected{% endif %}>
+                                {{ cartao.nome }}
+                                {% if not cartao.ativo %} (Inativo){% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="mes" class="form-label fw-semibold">
+                        <i class="bi bi-calendar-month text-primary"></i>
+                        Mês
+                    </label>
+                    <select name="mes" id="mes" class="form-select form-control-modern">
+                        {% for m in meses_disponiveis %}
+                            <option value="{{ m.id }}" {% if m.id == mes %}selected{% endif %}>
+                                {{ m.nome }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="ano" class="form-label fw-semibold">
+                        <i class="bi bi-calendar-year text-primary"></i>
+                        Ano
+                    </label>
+                    <select name="ano" id="ano" class="form-select form-control-modern">
+                        {% for a in anos_disponiveis %}
+                            <option value="{{ a }}" {% if a == ano %}selected{% endif %}>
+                                {{ a }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i>
+                        Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if cartao_selecionado %}
+    <!-- Cabeçalho do Cartão Selecionado -->
+    <div class="card shadow-sm mb-4 border-0 cartao-header-card">
+        <div class="card-body p-0">
+            <div class="cartao-header-bg">
+                <div class="cartao-pattern"></div>
+                <div class="row align-items-center p-4 text-white">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <div class="cartao-logo me-3">
+                                {% if cartao_selecionado.logo_imagem %}
+                                    <img src="{{ url_for('static', filename='uploads/' + cartao_selecionado.logo_imagem) }}" 
+                                         alt="Logo" 
+                                         class="rounded" 
+                                         style="width: 60px; height: 60px; object-fit: cover; border: 3px solid rgba(255,255,255,0.3);">
+                                {% else %}
+                                    <div class="icon-container bg-white bg-opacity-20" style="width: 60px; height: 60px;">
+                                        <i class="bi bi-credit-card-fill fs-2"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h4 class="mb-1 fw-bold">{{ cartao_selecionado.nome }}</h4>
+                                <div class="cartao-info">
+                                    <small class="opacity-75">
+                                        <i class="bi bi-calendar-event me-1"></i>
+                                        Vencimento: Dia {{ cartao_selecionado.dia_vencimento }}
+                                    </small>
+                                    <span class="mx-2">•</span>
+                                    <small class="opacity-75">
+                                        <i class="bi bi-calendar-range me-1"></i>
+                                        {{ meses_disponiveis[mes-1].nome }} de {{ ano }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <div class="extrato-totals">
+                            <div class="total-valor mb-2">
+                                <small class="opacity-75 d-block">Total do Período</small>
+                                <h2 class="mb-0 fw-bold">{{ total_mes | currency }}</h2>
+                            </div>
+                            <div class="total-info">
+                                <small class="opacity-75">
+                                    <i class="bi bi-receipt me-1"></i>
+                                    {{ lancamentos|length }} lançamento(s)
+                                </small>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Lista de Lançamentos -->
-{% if lancamentos %}
-<div class="card shadow-sm">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover table-striped align-middle mb-0">
-                <thead class="table-dark">
-                    <tr>
-                        <th style="width: 12%;">Data</th>
-                        <th style="width: 25%;">Descrição</th>
-                        <th style="width: 20%;">Categoria</th>
-                        <th style="width: 12%;">Valor</th>
-                        <th style="width: 15%;">Recorrência</th>
-                        <th style="width: 16%; text-align: center;">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for lancamento in lancamentos %}
-                    <tr>
-                        <td>
-                            <strong>{{ lancamento.data_vencimento.strftime('%d/%m') }}</strong>
-                            <br>
-                            <small class="text-muted">{{ lancamento.data_vencimento.strftime('%Y') }}</small>
-                        </td>
-                        <td>
-                            <i class="bi bi-credit-card-fill text-primary me-2"></i>
-                            <strong>{{ lancamento.descricao }}</strong>
-                            {% if lancamento.recorrencia and lancamento.recorrencia.tipo == 'Parcelada' %}
-                                {% set parcelas = lancamento.recorrencia.lancamentos|sort(attribute='data_vencimento') %}
-                                {% set index = parcelas.index(lancamento) + 1 %}
-                                <br>
-                                <small class="text-muted">Parcela {{ index }}/{{ lancamento.recorrencia.total_parcelas }}</small>
+    <!-- Status da Fatura -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    {% set fatura_paga = cartao_selecionado.fatura_paga_mes(ano, mes) %}
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-container {% if fatura_paga %}bg-success{% else %}bg-warning{% endif %} bg-opacity-10 {% if fatura_paga %}text-success{% else %}text-warning{% endif %} me-3">
+                                <i class="bi bi-{% if fatura_paga %}check-circle-fill{% else %}clock{% endif %}"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1 fw-semibold">Status da Fatura</h6>
+                                <p class="mb-0 text-muted">
+                                    Fatura de {{ meses_disponiveis[mes-1].nome }}/{{ ano }}
+                                    {% if total_mes == 0 %}
+                                        - Sem gastos no período
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            {% if total_mes > 0 %}
+                                <form action="{{ url_for('cartoes_bp.marcar_fatura_mes_paga', cartao_id=cartao_id, ano=ano, mes=mes) }}" method="POST" class="d-inline">
+                                    {% if fatura_paga %}
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="bi bi-check-circle-fill"></i>
+                                            Fatura Paga
+                                        </button>
+                                    {% else %}
+                                        <button type="submit" class="btn btn-outline-warning">
+                                            <i class="bi bi-circle"></i>
+                                            Marcar como Paga
+                                        </button>
+                                    {% endif %}
+                                </form>
+                            {% else %}
+                                <span class="badge bg-light text-dark">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Sem movimentação
+                                </span>
                             {% endif %}
-                        </td>
-                        <td>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between h-100">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-container bg-info bg-opacity-10 text-info me-3">
+                                <i class="bi bi-calendar-check"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1 fw-semibold">Próximo Vencimento</h6>
+                                <p class="mb-0 text-muted">
+                                    {% if mes == 12 %}
+                                        {{ cartao_selecionado.dia_vencimento }}/01/{{ ano + 1 }}
+                                    {% else %}
+                                        {{ cartao_selecionado.dia_vencimento }}/{{ "%02d"|format(mes + 1) }}/{{ ano }}
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            {% set dias_vencimento = ((cartao_selecionado.dia_vencimento if mes < 12 else cartao_selecionado.dia_vencimento)|int - (moment().day if mes == moment().month and ano == moment().year else 0)) %}
+                            {% if dias_vencimento > 0 and mes == moment().month and ano == moment().year %}
+                                <span class="badge bg-info">{{ dias_vencimento }} dias</span>
+                            {% else %}
+                                <span class="badge bg-secondary">-</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Lançamentos -->
+    {% if lancamentos %}
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-transparent border-0 pb-0">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="h5 mb-0 text-primary">
+                        <i class="bi bi-receipt me-1"></i>
+                        Lançamentos do Período
+                    </h4>
+                    <p class="text-muted mb-0 small">{{ lancamentos|length }} lançamento(s) encontrado(s)</p>
+                </div>
+                <div class="view-options">
+                    <div class="btn-group btn-group-sm" role="group">
+                        <input type="radio" class="btn-check" name="viewType" id="compactView" checked>
+                        <label class="btn btn-outline-primary" for="compactView">
+                            <i class="bi bi-list"></i>
+                        </label>
+                        <input type="radio" class="btn-check" name="viewType" id="detailedView">
+                        <label class="btn btn-outline-primary" for="detailedView">
+                            <i class="bi bi-table"></i>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <!-- Vista Compacta -->
+            <div id="compactViewContent" class="lancamentos-compactos">
+                {% for lancamento in lancamentos %}
+                <div class="lancamento-item">
+                    <div class="lancamento-content">
+                        <div class="lancamento-icon">
                             {% if lancamento.subcategoria %}
-                                <i class="{{ lancamento.subcategoria.categoria.icone }}" 
-                                   style="color: {{ lancamento.subcategoria.categoria.cor }};"></i>
-                                {{ lancamento.subcategoria.categoria.nome }}
-                                <br>
-                                <small class="text-muted">{{ lancamento.subcategoria.nome }}</small>
+                                <div class="icon-container" style="background-color: {{ lancamento.subcategoria.categoria.cor }}15; color: {{ lancamento.subcategoria.categoria.cor }};">
+                                    <i class="{{ lancamento.subcategoria.categoria.icone }}"></i>
+                                </div>
                             {% else %}
-                                <span class="text-muted">Sem categoria</span>
+                                <div class="icon-container bg-purple bg-opacity-10 text-purple">
+                                    <i class="bi bi-credit-card-fill"></i>
+                                </div>
                             {% endif %}
-                        </td>
-                        <td>
-                            <span class="fs-6 fw-bold text-danger">{{ lancamento.valor | currency }}</span>
-                        </td>
-                        <td>
+                        </div>
+                        <div class="lancamento-info flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="lancamento-descricao mb-1">{{ lancamento.descricao }}</h6>
+                                    <div class="lancamento-meta">
+                                        <span class="data-lancamento">
+                                            <i class="bi bi-calendar-event me-1"></i>
+                                            {{ lancamento.data_vencimento.strftime('%d/%m/%Y') }}
+                                        </span>
+                                        {% if lancamento.subcategoria %}
+                                            <span class="categoria-lancamento">
+                                                <i class="bi bi-tag me-1"></i>
+                                                {{ lancamento.subcategoria.categoria.nome }} / {{ lancamento.subcategoria.nome }}
+                                            </span>
+                                        {% endif %}
+                                        {% if lancamento.recorrencia %}
+                                            <span class="recorrencia-badge">
+                                                {% if lancamento.recorrencia.tipo == 'Parcelada' %}
+                                                    {% set parcelas = lancamento.recorrencia.lancamentos|sort(attribute='data_vencimento') %}
+                                                    {% set index = parcelas.index(lancamento) + 1 %}
+                                                    <i class="bi bi-credit-card-2-front me-1"></i>
+                                                    {{ index }}/{{ lancamento.recorrencia.total_parcelas }}
+                                                {% else %}
+                                                    <i class="bi bi-arrow-repeat me-1"></i>
+                                                    {{ lancamento.recorrencia.tipo }}
+                                                {% endif %}
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="lancamento-valor">
+                                    <span class="valor-principal">{{ lancamento.valor | currency }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="lancamento-actions">
                             {% if lancamento.recorrencia_id %}
-                                {% if lancamento.recorrencia.tipo == 'Fixa' %}
-                                    <span class="badge bg-primary">Fixa Mensal</span>
-                                {% elif lancamento.recorrencia.tipo == 'Parcelada' %}
-                                    <span class="badge bg-warning">Parcelada</span>
-                                {% elif lancamento.recorrencia.tipo == 'Anual' %}
-                                    <span class="badge bg-info">Anual</span>
-                                {% elif lancamento.recorrencia.tipo == 'Semanal' %}
-                                    <span class="badge bg-success">Semanal</span>
-                                {% elif lancamento.recorrencia.tipo == 'Quinzenal' %}
-                                    <span class="badge bg-secondary">Quinzenal</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">{{ lancamento.recorrencia.tipo }}</span>
-                                {% endif %}
-                            {% else %}
-                                <span class="badge bg-secondary">Única</span>
-                            {% endif %}
-                        </td>
-                        <td style="text-align: center;">
-                            {% if lancamento.recorrencia_id %}
-                                <!-- Lançamento de Recorrência -->
-                                <button type="button" class="btn btn-sm btn-outline-primary me-1" 
+                                <button type="button" class="btn btn-outline-primary btn-sm" 
                                         data-bs-toggle="modal" 
                                         data-bs-target="#modalEditarRecorrencia"
                                         data-lancamento-id="{{ lancamento.id }}"
@@ -174,7 +318,7 @@
                                         title="Editar Recorrência">
                                     <i class="bi bi-pencil-fill"></i>
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                <button type="button" class="btn btn-outline-danger btn-sm" 
                                         data-bs-toggle="modal" 
                                         data-bs-target="#modalExcluirRecorrencia"
                                         data-lancamento-id="{{ lancamento.id }}"
@@ -185,8 +329,7 @@
                                     <i class="bi bi-trash-fill"></i>
                                 </button>
                             {% else %}
-                                <!-- Lançamento Único -->
-                                <button type="button" class="btn btn-sm btn-outline-primary me-1" 
+                                <button type="button" class="btn btn-outline-primary btn-sm" 
                                         data-bs-toggle="modal" 
                                         data-bs-target="#modalEditarUnico"
                                         data-lancamento-id="{{ lancamento.id }}"
@@ -199,7 +342,7 @@
                                         title="Editar Lançamento">
                                     <i class="bi bi-pencil-fill"></i>
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                <button type="button" class="btn btn-outline-danger btn-sm" 
                                         data-bs-toggle="modal" 
                                         data-bs-target="#modalExcluirUnico"
                                         data-lancamento-id="{{ lancamento.id }}"
@@ -208,47 +351,283 @@
                                     <i class="bi bi-trash-fill"></i>
                                 </button>
                             {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-                <tfoot class="table-group-divider">
-                    <tr class="table-primary">
-                        <td colspan="3" class="text-end fw-bold">TOTAL DO MÊS:</td>
-                        <td class="fw-bold fs-5 text-danger">{{ total_mes | currency }}</td>
-                        <td colspan="2"></td>
-                    </tr>
-                </tfoot>
-            </table>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Vista Detalhada -->
+            <div id="detailedViewContent" class="table-responsive" style="display: none;">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="border-0 ps-4">Data</th>
+                            <th class="border-0">Descrição</th>
+                            <th class="border-0">Categoria</th>
+                            <th class="border-0">Valor</th>
+                            <th class="border-0">Recorrência</th>
+                            <th class="border-0 text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lancamento in lancamentos %}
+                        <tr class="table-row-hover">
+                            <td class="ps-4">
+                                <div class="d-flex flex-column">
+                                    <span class="fw-medium">{{ lancamento.data_vencimento.strftime('%d/%m') }}</span>
+                                    <small class="text-muted">{{ lancamento.data_vencimento.strftime('%Y') }}</small>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if lancamento.subcategoria %}
+                                        <i class="{{ lancamento.subcategoria.categoria.icone }} me-2" 
+                                           style="color: {{ lancamento.subcategoria.categoria.cor }}; font-size: 1.1rem;"></i>
+                                    {% else %}
+                                        <i class="bi bi-credit-card-fill me-2 text-purple" style="font-size: 1.1rem;"></i>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-medium">{{ lancamento.descricao }}</div>
+                                        {% if lancamento.recorrencia and lancamento.recorrencia.tipo == 'Parcelada' %}
+                                            {% set parcelas = lancamento.recorrencia.lancamentos|sort(attribute='data_vencimento') %}
+                                            {% set index = parcelas.index(lancamento) + 1 %}
+                                            <small class="text-muted">Parcela {{ index }}/{{ lancamento.recorrencia.total_parcelas }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if lancamento.subcategoria %}
+                                    <span class="badge" style="background-color: {{ lancamento.subcategoria.categoria.cor }}15; color: {{ lancamento.subcategoria.categoria.cor }};">
+                                        <i class="{{ lancamento.subcategoria.categoria.icone }} me-1"></i>
+                                        {{ lancamento.subcategoria.categoria.nome }}
+                                    </span>
+                                    <br>
+                                    <small class="text-muted">{{ lancamento.subcategoria.nome }}</small>
+                                {% else %}
+                                    <span class="badge bg-purple bg-opacity-10 text-purple">
+                                        <i class="bi bi-credit-card me-1"></i>
+                                        Sem categoria
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="fs-6 fw-bold text-danger">{{ lancamento.valor | currency }}</span>
+                            </td>
+                            <td>
+                                {% if lancamento.recorrencia_id %}
+                                    {% if lancamento.recorrencia.tipo == 'Fixa' %}
+                                        <span class="badge bg-primary bg-opacity-10 text-primary">
+                                            <i class="bi bi-calendar-month me-1"></i>
+                                            Fixa Mensal
+                                        </span>
+                                    {% elif lancamento.recorrencia.tipo == 'Parcelada' %}
+                                        <span class="badge bg-warning bg-opacity-10 text-warning">
+                                            <i class="bi bi-credit-card-2-front me-1"></i>
+                                            Parcelada
+                                        </span>
+                                    {% elif lancamento.recorrencia.tipo == 'Anual' %}
+                                        <span class="badge bg-info bg-opacity-10 text-info">
+                                            <i class="bi bi-calendar-year me-1"></i>
+                                            Anual
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                            <i class="bi bi-arrow-repeat me-1"></i>
+                                            {{ lancamento.recorrencia.tipo }}
+                                        </span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                        <i class="bi bi-1-circle me-1"></i>
+                                        Única
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if lancamento.recorrencia_id %}
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-primary" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#modalEditarRecorrencia"
+                                                data-lancamento-id="{{ lancamento.id }}"
+                                                data-recorrencia-id="{{ lancamento.recorrencia_id }}"
+                                                data-descricao="{{ lancamento.recorrencia.descricao_base }}"
+                                                data-valor="{{ lancamento.valor }}"
+                                                data-categoria-id="{{ lancamento.subcategoria.categoria_id if lancamento.subcategoria else '' }}"
+                                                data-subcategoria-id="{{ lancamento.subcategoria_id }}"
+                                                data-cartao-id="{{ lancamento.cartao_credito_id }}"
+                                                data-vencimento="{{ lancamento.data_vencimento.strftime('%Y-%m-%d') }}"
+                                                title="Editar Recorrência">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#modalExcluirRecorrencia"
+                                                data-lancamento-id="{{ lancamento.id }}"
+                                                data-recorrencia-id="{{ lancamento.recorrencia_id }}"
+                                                data-descricao="{{ lancamento.descricao }}"
+                                                data-vencimento="{{ lancamento.data_vencimento.strftime('%d/%m/%Y') }}"
+                                                title="Excluir Recorrência">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </div>
+                                {% else %}
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-primary" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#modalEditarUnico"
+                                                data-lancamento-id="{{ lancamento.id }}"
+                                                data-descricao="{{ lancamento.descricao }}"
+                                                data-valor="{{ lancamento.valor }}"
+                                                data-categoria-id="{{ lancamento.subcategoria.categoria_id if lancamento.subcategoria else '' }}"
+                                                data-subcategoria-id="{{ lancamento.subcategoria_id }}"
+                                                data-cartao-id="{{ lancamento.cartao_credito_id }}"
+                                                data-vencimento="{{ lancamento.data_vencimento.strftime('%Y-%m-%d') }}"
+                                                title="Editar Lançamento">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#modalExcluirUnico"
+                                                data-lancamento-id="{{ lancamento.id }}"
+                                                data-descricao="{{ lancamento.descricao }}"
+                                                title="Excluir Lançamento">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-group-divider">
+                        <tr class="table-primary">
+                            <td colspan="3" class="ps-4 fw-bold text-white">TOTAL DO PERÍODO:</td>
+                            <td class="fw-bold text-white fs-5">{{ total_mes | currency }}</td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
         </div>
     </div>
-</div>
-{% else %}
-<div class="alert alert-info text-center">
-    <i class="bi bi-info-circle fs-1 text-primary d-block mb-3"></i>
-    <h5>Nenhum lançamento encontrado</h5>
-    <p class="mb-0">
-        Não há lançamentos para o cartão <strong>{{ cartao_selecionado.nome }}</strong> 
-        em <strong>{{ meses_disponiveis[mes-1].nome }}/{{ ano }}</strong>.
-    </p>
-</div>
-{% endif %}
 
-{% else %}
-<!-- Quando nenhum cartão está selecionado -->
-<div class="alert alert-light text-center">
-    <i class="bi bi-credit-card fs-1 text-muted d-block mb-3"></i>
-    <h5>Selecione um cartão para visualizar o extrato</h5>
-    <p class="mb-0">Use os filtros acima para escolher o cartão, mês e ano desejados.</p>
-</div>
-{% endif %}
+    {% else %}
+    <!-- Estado Vazio para Lançamentos -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body text-center py-5">
+            <div class="empty-state">
+                <div class="icon-container bg-info bg-opacity-10 text-info mx-auto mb-4" style="width: 80px; height: 80px;">
+                    <i class="bi bi-receipt" style="font-size: 2.5rem;"></i>
+                </div>
+                <h4 class="text-info mb-3">Nenhum lançamento encontrado</h4>
+                <p class="text-muted mb-4">
+                    Não há lançamentos para o cartão <strong>{{ cartao_selecionado.nome }}</strong> 
+                    em <strong>{{ meses_disponiveis[mes-1].nome }}/{{ ano }}</strong>.
+                    <br>
+                    Que tal adicionar um novo lançamento?
+                </p>
+                <a href="{{ url_for('lancamentos_bp.gerenciar_lancamentos') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i>
+                    Adicionar Lançamento
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
+    {% else %}
+    <!-- Estado quando nenhum cartão está selecionado -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body text-center py-5">
+            <div class="empty-state">
+                <div class="icon-container bg-primary bg-opacity-10 text-primary mx-auto mb-4" style="width: 80px; height: 80px;">
+                    <i class="bi bi-credit-card" style="font-size: 2.5rem;"></i>
+                </div>
+                <h4 class="text-primary mb-3">Selecione um cartão para visualizar o extrato</h4>
+                <p class="text-muted mb-4">
+                    Use os filtros acima para escolher o cartão, mês e ano desejados.
+                    <br>
+                    Você também pode gerenciar seus cartões ou adicionar novos.
+                </p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <a href="{{ url_for('cartoes_bp.gerenciar_cartoes') }}" class="btn btn-primary">
+                        <i class="bi bi-credit-card-fill"></i>
+                        Gerenciar Cartões
+                    </a>
+                    <a href="{{ url_for('lancamentos_bp.gerenciar_lancamentos') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-plus-lg"></i>
+                        Novo Lançamento
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Resumo do Período (se houver lançamentos) -->
+    {% if cartao_selecionado and lancamentos %}
+    <div class="row mt-4">
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm estatistica-card">
+                <div class="card-body text-center p-4">
+                    <div class="icon-container bg-primary bg-opacity-10 text-primary mx-auto mb-3">
+                        <i class="bi bi-receipt fs-1"></i>
+                    </div>
+                    <h6 class="text-muted mb-1 text-uppercase small">Total Lançamentos</h6>
+                    <h3 class="fw-bold text-primary mb-0">{{ lancamentos|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm estatistica-card">
+                <div class="card-body text-center p-4">
+                    <div class="icon-container bg-success bg-opacity-10 text-success mx-auto mb-3">
+                        <i class="bi bi-calculator fs-1"></i>
+                    </div>
+                    <h6 class="text-muted mb-1 text-uppercase small">Valor Médio</h6>
+                    <h3 class="fw-bold text-success mb-0">{{ (total_mes / lancamentos|length) | currency if lancamentos|length > 0 else "R$ 0,00" }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm estatistica-card">
+                <div class="card-body text-center p-4">
+                    <div class="icon-container bg-warning bg-opacity-10 text-warning mx-auto mb-3">
+                        <i class="bi bi-arrow-repeat fs-1"></i>
+                    </div>
+                    <h6 class="text-muted mb-1 text-uppercase small">Recorrentes</h6>
+                    <h3 class="fw-bold text-warning mb-0">{{ lancamentos|selectattr('recorrencia_id')|list|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm estatistica-card">
+                <div class="card-body text-center p-4">
+                    <div class="icon-container bg-info bg-opacity-10 text-info mx-auto mb-3">
+                        <i class="bi bi-tags fs-1"></i>
+                    </div>
+                    <h6 class="text-muted mb-1 text-uppercase small">Categorias</h6>
+                    <h3 class="fw-bold text-info mb-0">{{ lancamentos|map(attribute='subcategoria.categoria')|unique|list|length if lancamentos|selectattr('subcategoria')|list else 0 }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modais (mantidos os originais com estilos modernizados) -->
 <!-- Modal para Editar Lançamento Único -->
 <div class="modal fade" id="modalEditarUnico" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
+        <div class="modal-content border-0 shadow-lg">
             <div class="modal-header">
-                <h5 class="modal-title">Editar Lançamento</h5>
+                <h5 class="modal-title d-flex align-items-center text-primary">
+                    <i class="bi bi-pencil-fill me-2"></i>
+                    Editar Lançamento
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ url_for('cartoes_bp.editar_lancamento_cartao') }}">
@@ -258,22 +637,22 @@
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="edit_unico_descricao" class="form-label">Descrição</label>
-                            <input type="text" class="form-control" name="descricao" id="edit_unico_descricao" required>
+                            <label for="edit_unico_descricao" class="form-label fw-semibold">Descrição</label>
+                            <input type="text" class="form-control form-control-modern" name="descricao" id="edit_unico_descricao" required>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label for="edit_unico_valor" class="form-label">Valor (R$)</label>
-                            <input type="number" step="0.01" class="form-control" name="valor" id="edit_unico_valor" required>
+                            <label for="edit_unico_valor" class="form-label fw-semibold">Valor (R$)</label>
+                            <input type="number" step="0.01" class="form-control form-control-modern" name="valor" id="edit_unico_valor" required>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label for="edit_unico_data" class="form-label">Data</label>
-                            <input type="date" class="form-control" name="data_vencimento" id="edit_unico_data" required>
+                            <label for="edit_unico_data" class="form-label fw-semibold">Data</label>
+                            <input type="date" class="form-control form-control-modern" name="data_vencimento" id="edit_unico_data" required>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <label for="edit_unico_categoria" class="form-label">Categoria</label>
-                            <select class="form-select" name="categoria_id" id="edit_unico_categoria" required>
+                            <label for="edit_unico_categoria" class="form-label fw-semibold">Categoria</label>
+                            <select class="form-select form-control-modern" name="categoria_id" id="edit_unico_categoria" required>
                                 <option value="">Selecione...</option>
                                 {% for cat in categorias %}
                                     <option value="{{ cat.id }}">{{ cat.nome }}</option>
@@ -281,14 +660,14 @@
                             </select>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="edit_unico_subcategoria" class="form-label">Subcategoria</label>
-                            <select class="form-select" name="subcategoria_id" id="edit_unico_subcategoria" required>
+                            <label for="edit_unico_subcategoria" class="form-label fw-semibold">Subcategoria</label>
+                            <select class="form-select form-control-modern" name="subcategoria_id" id="edit_unico_subcategoria" required>
                                 <option value="">Selecione uma categoria primeiro</option>
                             </select>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="edit_unico_cartao" class="form-label">Cartão</label>
-                            <select class="form-select" name="cartao_id" id="edit_unico_cartao" required>
+                            <label for="edit_unico_cartao" class="form-label fw-semibold">Cartão</label>
+                            <select class="form-select form-control-modern" name="cartao_id" id="edit_unico_cartao" required>
                                 {% for cartao in cartoes %}
                                     <option value="{{ cartao.id }}">{{ cartao.nome }}</option>
                                 {% endfor %}
@@ -298,7 +677,10 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg"></i>
+                        Salvar Alterações
+                    </button>
                 </div>
             </form>
         </div>
@@ -308,9 +690,12 @@
 <!-- Modal para Excluir Lançamento Único -->
 <div class="modal fade" id="modalExcluirUnico" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content border-0 shadow-lg">
             <div class="modal-header">
-                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <h5 class="modal-title d-flex align-items-center text-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    Confirmar Exclusão
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ url_for('cartoes_bp.excluir_lancamento_cartao') }}">
@@ -319,14 +704,20 @@
                     <input type="hidden" name="tipo_exclusao" value="unico">
                     
                     <p>Você está prestes a deletar o lançamento:</p>
-                    <div class="alert alert-warning">
+                    <div class="alert alert-warning border-0">
                         <strong id="del_unico_descricao"></strong>
                     </div>
-                    <p class="text-danger">Esta ação não pode ser desfeita.</p>
+                    <p class="text-danger mb-0">
+                        <i class="bi bi-exclamation-circle me-1"></i>
+                        Esta ação não pode ser desfeita.
+                    </p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-danger">Confirmar Exclusão</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash-fill"></i>
+                        Confirmar Exclusão
+                    </button>
                 </div>
             </form>
         </div>
@@ -336,9 +727,12 @@
 <!-- Modal para Editar Recorrência -->
 <div class="modal fade" id="modalEditarRecorrencia" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
+        <div class="modal-content border-0 shadow-lg">
             <div class="modal-header">
-                <h5 class="modal-title">Editar Recorrência</h5>
+                <h5 class="modal-title d-flex align-items-center text-primary">
+                    <i class="bi bi-arrow-repeat me-2"></i>
+                    Editar Recorrência
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ url_for('cartoes_bp.editar_lancamento_cartao') }}">
@@ -348,22 +742,22 @@
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="edit_rec_descricao" class="form-label">Descrição</label>
-                            <input type="text" class="form-control" name="descricao" id="edit_rec_descricao" required>
+                            <label for="edit_rec_descricao" class="form-label fw-semibold">Descrição</label>
+                            <input type="text" class="form-control form-control-modern" name="descricao" id="edit_rec_descricao" required>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label for="edit_rec_valor" class="form-label">Valor (R$)</label>
-                            <input type="number" step="0.01" class="form-control" name="valor" id="edit_rec_valor" required>
+                            <label for="edit_rec_valor" class="form-label fw-semibold">Valor (R$)</label>
+                            <input type="number" step="0.01" class="form-control form-control-modern" name="valor" id="edit_rec_valor" required>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label for="edit_rec_data" class="form-label">A partir de</label>
-                            <input type="date" class="form-control" name="data_inicio" id="edit_rec_data" required>
+                            <label for="edit_rec_data" class="form-label fw-semibold">A partir de</label>
+                            <input type="date" class="form-control form-control-modern" name="data_inicio" id="edit_rec_data" required>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <label for="edit_rec_categoria" class="form-label">Categoria</label>
-                            <select class="form-select" name="categoria_id" id="edit_rec_categoria" required>
+                            <label for="edit_rec_categoria" class="form-label fw-semibold">Categoria</label>
+                            <select class="form-select form-control-modern" name="categoria_id" id="edit_rec_categoria" required>
                                 <option value="">Selecione...</option>
                                 {% for cat in categorias %}
                                     <option value="{{ cat.id }}">{{ cat.nome }}</option>
@@ -371,14 +765,14 @@
                             </select>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="edit_rec_subcategoria" class="form-label">Subcategoria</label>
-                            <select class="form-select" name="subcategoria_id" id="edit_rec_subcategoria" required>
+                            <label for="edit_rec_subcategoria" class="form-label fw-semibold">Subcategoria</label>
+                            <select class="form-select form-control-modern" name="subcategoria_id" id="edit_rec_subcategoria" required>
                                 <option value="">Selecione uma categoria primeiro</option>
                             </select>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="edit_rec_cartao" class="form-label">Cartão</label>
-                            <select class="form-select" name="cartao_id" id="edit_rec_cartao" required>
+                            <label for="edit_rec_cartao" class="form-label fw-semibold">Cartão</label>
+                            <select class="form-select form-control-modern" name="cartao_id" id="edit_rec_cartao" required>
                                 {% for cartao in cartoes %}
                                     <option value="{{ cartao.id }}">{{ cartao.nome }}</option>
                                 {% endfor %}
@@ -386,25 +780,30 @@
                         </div>
                     </div>
                     
-                    <fieldset class="mb-3">
-                        <legend class="fs-6">Escopo da Edição</legend>
-                        <div class="form-check">
+                    <div class="border rounded p-3 bg-light">
+                        <h6 class="mb-3">Escopo da Edição</h6>
+                        <div class="form-check mb-2">
                             <input class="form-check-input" type="radio" name="tipo_edicao" id="edicao_mes" value="apenas_mes" checked>
                             <label class="form-check-label" for="edicao_mes">
+                                <i class="bi bi-calendar-event me-1"></i>
                                 Editar apenas este mês
                             </label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="tipo_edicao" id="edicao_futuros" value="futuros">
                             <label class="form-check-label" for="edicao_futuros">
+                                <i class="bi bi-calendar-range me-1"></i>
                                 Editar a partir deste mês (futuros)
                             </label>
                         </div>
-                    </fieldset>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg"></i>
+                        Salvar Alterações
+                    </button>
                 </div>
             </form>
         </div>
@@ -414,9 +813,12 @@
 <!-- Modal para Excluir Recorrência -->
 <div class="modal fade" id="modalExcluirRecorrencia" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content border-0 shadow-lg">
             <div class="modal-header">
-                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <h5 class="modal-title d-flex align-items-center text-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    Confirmar Exclusão
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ url_for('cartoes_bp.excluir_lancamento_cartao') }}">
@@ -425,30 +827,35 @@
                     <input type="hidden" name="recorrencia_id" id="del_rec_recorrencia_id">
                     
                     <p>Você está prestes a deletar o lançamento:</p>
-                    <div class="alert alert-warning">
+                    <div class="alert alert-warning border-0">
                         <strong id="del_rec_descricao"></strong><br>
                         <small>Vencimento: <span id="del_rec_vencimento"></span></small>
                     </div>
                     
-                    <fieldset>
-                        <legend class="fs-6">Escopo da Exclusão</legend>
-                        <div class="form-check">
+                    <div class="border rounded p-3 bg-light">
+                        <h6 class="mb-3">Escopo da Exclusão</h6>
+                        <div class="form-check mb-2">
                             <input class="form-check-input" type="radio" name="tipo_exclusao" id="exclusao_mes" value="apenas_mes" checked>
                             <label class="form-check-label" for="exclusao_mes">
+                                <i class="bi bi-calendar-event me-1"></i>
                                 Excluir apenas este mês
                             </label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="tipo_exclusao" id="exclusao_futuros" value="futuros">
                             <label class="form-check-label" for="exclusao_futuros">
+                                <i class="bi bi-calendar-range me-1"></i>
                                 Excluir a partir deste mês (futuros)
                             </label>
                         </div>
-                    </fieldset>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-danger">Confirmar Exclusão</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash-fill"></i>
+                        Confirmar Exclusão
+                    </button>
                 </div>
             </form>
         </div>
@@ -456,9 +863,23 @@
 </div>
 
 <script>
-// Script para gerenciar os modais
+// Toggle entre vistas
 document.addEventListener('DOMContentLoaded', function() {
-    // Modal Editar Único
+    document.getElementById('compactView').addEventListener('change', function() {
+        if (this.checked) {
+            document.getElementById('compactViewContent').style.display = 'block';
+            document.getElementById('detailedViewContent').style.display = 'none';
+        }
+    });
+    
+    document.getElementById('detailedView').addEventListener('change', function() {
+        if (this.checked) {
+            document.getElementById('compactViewContent').style.display = 'none';
+            document.getElementById('detailedViewContent').style.display = 'block';
+        }
+    });
+    
+    // Modais - mantido o código original
     const modalEditarUnico = document.getElementById('modalEditarUnico');
     if (modalEditarUnico) {
         modalEditarUnico.addEventListener('show.bs.modal', function (event) {
@@ -471,7 +892,6 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('edit_unico_categoria').value = button.getAttribute('data-categoria-id');
             document.getElementById('edit_unico_cartao').value = button.getAttribute('data-cartao-id');
             
-            // Carregar subcategorias se necessário
             const categoriaId = button.getAttribute('data-categoria-id');
             const subcategoriaId = button.getAttribute('data-subcategoria-id');
             if (categoriaId) {
@@ -480,7 +900,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Modal Excluir Único
     const modalExcluirUnico = document.getElementById('modalExcluirUnico');
     if (modalExcluirUnico) {
         modalExcluirUnico.addEventListener('show.bs.modal', function (event) {
@@ -491,7 +910,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Modal Editar Recorrência
     const modalEditarRecorrencia = document.getElementById('modalEditarRecorrencia');
     if (modalEditarRecorrencia) {
         modalEditarRecorrencia.addEventListener('show.bs.modal', function (event) {
@@ -505,7 +923,6 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('edit_rec_categoria').value = button.getAttribute('data-categoria-id');
             document.getElementById('edit_rec_cartao').value = button.getAttribute('data-cartao-id');
             
-            // Carregar subcategorias se necessário
             const categoriaId = button.getAttribute('data-categoria-id');
             const subcategoriaId = button.getAttribute('data-subcategoria-id');
             if (categoriaId) {
@@ -514,7 +931,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Modal Excluir Recorrência
     const modalExcluirRecorrencia = document.getElementById('modalExcluirRecorrencia');
     if (modalExcluirRecorrencia) {
         modalExcluirRecorrencia.addEventListener('show.bs.modal', function (event) {
@@ -562,7 +978,6 @@ function carregarSubcategorias(categoriaSelectId, subcategoriaSelectId, subcateg
     }
 }
 
-// Event listeners para mudança de categoria
 document.getElementById('edit_unico_categoria')?.addEventListener('change', function() {
     carregarSubcategorias('edit_unico_categoria', 'edit_unico_subcategoria');
 });
@@ -571,4 +986,326 @@ document.getElementById('edit_rec_categoria')?.addEventListener('change', functi
     carregarSubcategorias('edit_rec_categoria', 'edit_rec_subcategoria');
 });
 </script>
-{% endblock %}
+
+{% block scripts %}
+<style>
+/* Estilos específicos para a página de extrato */
+.extrato-container {
+    max-width: 100%;
+}
+
+/* Campos de formulário modernos */
+.form-control-modern, .form-select-modern {
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background: var(--bg-secondary);
+    transition: var(--transition);
+}
+
+.form-control-modern:focus, .form-select-modern:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Header gradiente */
+.bg-gradient {
+    background: var(--gradient-primary) !important;
+}
+
+/* Header do cartão */
+.cartao-header-card {
+    overflow: hidden;
+}
+
+.cartao-header-bg {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    position: relative;
+}
+
+.cartao-pattern {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(50%, -50%);
+}
+
+.cartao-pattern::before {
+    content: '';
+    position: absolute;
+    top: 100px;
+    left: -50px;
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+/* Lista compacta de lançamentos */
+.lancamentos-compactos {
+    padding: 0;
+}
+
+.lancamento-item {
+    border-bottom: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.lancamento-item:last-child {
+    border-bottom: none;
+}
+
+.lancamento-item:hover {
+    background: var(--bg-light);
+}
+
+.lancamento-content {
+    display: flex;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    gap: 1rem;
+}
+
+.lancamento-icon {
+    flex-shrink: 0;
+}
+
+.lancamento-info {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.lancamento-descricao {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.lancamento-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.lancamento-meta span {
+    display: flex;
+    align-items: center;
+}
+
+.recorrencia-badge {
+    background: var(--bg-light);
+    padding: 0.125rem 0.5rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.lancamento-valor {
+    flex-shrink: 0;
+    text-align: right;
+}
+
+.valor-principal {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--danger-color);
+}
+
+.lancamento-actions {
+    flex-shrink: 0;
+    display: flex;
+    gap: 0.5rem;
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.lancamento-item:hover .lancamento-actions {
+    opacity: 1;
+}
+
+/* Tabela detalhada */
+.table-row-hover {
+    transition: var(--transition);
+}
+
+.table-row-hover:hover {
+    background: var(--bg-light) !important;
+    transform: scale(1.01);
+}
+
+/* Cards de estatística */
+.estatistica-card {
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.estatistica-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Estado vazio */
+.empty-state {
+    padding: 2rem;
+}
+
+/* Cor roxa para elementos específicos */
+.text-purple {
+    color: #6f42c1 !important;
+}
+
+.bg-purple {
+    background-color: #6f42c1 !important;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .lancamento-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .lancamento-info {
+        width: 100%;
+    }
+    
+    .d-flex.justify-content-between {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .lancamento-valor {
+        text-align: left;
+    }
+    
+    .lancamento-actions {
+        opacity: 1;
+        margin-top: 0.5rem;
+    }
+    
+    .lancamento-meta {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .extrato-totals {
+        text-align: left !important;
+        margin-top: 1rem;
+    }
+    
+    .cartao-info {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .cartao-info span.mx-2 {
+        display: none;
+    }
+}
+
+@media (max-width: 576px) {
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .lancamento-content {
+        padding: 1rem;
+    }
+    
+    .cartao-header-bg .row {
+        text-align: center;
+    }
+    
+    .cartao-header-bg .col-md-6:last-child {
+        margin-top: 1rem;
+    }
+    
+    .d-flex.gap-2 {
+        flex-direction: column;
+        gap: 0.5rem !important;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+}
+
+/* Animações */
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.lancamento-item {
+    animation: slideInLeft 0.3s ease-out;
+}
+
+.lancamento-item:nth-child(n) {
+    animation-delay: calc(var(--animation-order, 0) * 0.05s);
+}
+
+/* Scrollbar personalizada */
+.lancamentos-compactos {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.lancamentos-compactos::-webkit-scrollbar {
+    width: 4px;
+}
+
+.lancamentos-compactos::-webkit-scrollbar-track {
+    background: var(--bg-light);
+    border-radius: 2px;
+}
+
+.lancamentos-compactos::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 2px;
+}
+
+.lancamentos-compactos::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+}
+
+/* Destaque para lançamentos parcelados */
+.lancamento-item[data-parcelado="true"] {
+    border-left: 3px solid var(--warning-color);
+}
+
+/* Animação no carregamento */
+.lancamento-item {
+    --animation-order: 0;
+}
+
+/* Estilo para botões de ação que aparecem no hover */
+.lancamento-actions .btn {
+    border: none;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    transition: var(--transition);
+}
+
+.lancamento-actions .btn:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.lancamento-actions .btn.btn-outline-danger:hover {
+    background: var(--danger-color);
+    color: white;
+}

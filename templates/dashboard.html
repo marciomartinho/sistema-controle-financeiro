@@ -1,365 +1,520 @@
 {% extends 'base.html' %}
 
+{% block title %}Dashboard - {{ super() }}{% endblock %}
+
 {% block content %}
-<div class="container">
-    <div class="card shadow-sm mb-4">
+<div class="dashboard-container">
+    <!-- Header do Dashboard -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-0 text-primary fw-bold">
+                <i class="bi bi-speedometer2 me-2"></i>
+                Dashboard Financeiro
+            </h1>
+            <p class="text-muted mb-0">Visão geral das suas finanças</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('lancamentos_bp.gerenciar_lancamentos') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i>
+                Novo Lançamento
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros de Data Modernizados -->
+    <div class="card shadow-sm mb-4 border-0">
         <div class="card-body">
-            <form method="GET" action="{{ url_for('dashboard_bp.dashboard') }}" class="row g-3 align-items-center">
-                <div class="col-auto">
-                    <label for="mes" class="form-label fw-bold">Mês:</label>
+            <form method="GET" action="{{ url_for('dashboard_bp.dashboard') }}" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="mes" class="form-label">
+                        <i class="bi bi-calendar-month text-primary"></i>
+                        Mês
+                    </label>
                     <select name="mes" id="mes" class="form-select" onchange="this.form.submit()">
                         {% for mes in meses_disponiveis %}
-                            <option value="{{ mes.id }}" {% if mes.id == mes_selecionado %}selected{% endif %}>{{ mes.nome }}</option>
+                            <option value="{{ mes.id }}" {% if mes.id == mes_selecionado %}selected{% endif %}>
+                                {{ mes.nome }}
+                            </option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-auto">
-                    <label for="ano" class="form-label fw-bold">Ano:</label>
+                <div class="col-md-4">
+                    <label for="ano" class="form-label">
+                        <i class="bi bi-calendar-year text-primary"></i>
+                        Ano
+                    </label>
                     <select name="ano" id="ano" class="form-select" onchange="this.form.submit()">
                         {% for ano in anos_disponiveis %}
-                            <option value="{{ ano }}" {% if ano == ano_selecionado %}selected{% endif %}>{{ ano }}</option>
+                            <option value="{{ ano }}" {% if ano == ano_selecionado %}selected{% endif %}>
+                                {{ ano }}
+                            </option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-auto ms-auto">
-                    <a href="{{ url_for('dashboard_bp.dashboard') }}" class="btn btn-outline-secondary">Mês Atual</a>
+                <div class="col-md-4">
+                    <a href="{{ url_for('dashboard_bp.dashboard') }}" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-arrow-clockwise"></i>
+                        Mês Atual
+                    </a>
                 </div>
             </form>
         </div>
     </div>
 
-    <h3 class="mb-3">Saldos Atuais (Contas Corrente)</h3>
-    <div class="row mb-4">
+    <!-- Cards de Saldo das Contas -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3 class="h4 mb-3 d-flex align-items-center">
+                <div class="icon-container me-2">
+                    <i class="bi bi-wallet2"></i>
+                </div>
+                Saldos das Contas Corrente
+            </h3>
+        </div>
+        
         {% for conta in contas %}
-            <div class="col-md-3 mb-3">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body d-flex align-items-center">
-                        {% if conta.logo_imagem %}
-                            <img src="{{ url_for('static', filename='uploads/' + conta.logo_imagem) }}" alt="Logo" style="width: 40px; height: auto; margin-right: 15px; border-radius: 5px;">
-                        {% endif %}
-                        <div>
-                            <h6 class="card-title mb-0">{{ conta.nome }}</h6>
-                            <p class="card-text fs-6 fw-bold {% if conta.saldo_atual < 0 %}text-danger{% else %}text-success{% endif %}">
+            <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card h-100 border-0 shadow-sm conta-card" data-saldo="{{ conta.saldo_atual }}">
+                    <div class="card-body d-flex align-items-center p-3">
+                        <div class="flex-shrink-0 me-3">
+                            {% if conta.logo_imagem %}
+                                <img src="{{ url_for('static', filename='uploads/' + conta.logo_imagem) }}" 
+                                     alt="Logo" 
+                                     class="rounded" 
+                                     style="width: 48px; height: 48px; object-fit: cover; border: 2px solid var(--border-color);">
+                            {% else %}
+                                <div class="icon-container">
+                                    <i class="bi bi-bank"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1 fw-semibold">{{ conta.nome }}</h6>
+                            <p class="card-text mb-0 fs-5 fw-bold {% if conta.saldo_atual < 0 %}text-danger{% else %}text-success{% endif %}">
                                 {{ conta.saldo_atual | currency }}
                             </p>
+                            <small class="text-muted">Saldo atual</small>
                         </div>
                     </div>
                 </div>
             </div>
         {% else %}
             <div class="col-12">
-                <p class="text-muted">Nenhuma conta corrente cadastrada para exibir o saldo.</p>
+                <div class="alert alert-info text-center border-0">
+                    <i class="bi bi-info-circle fs-1 text-primary d-block mb-3"></i>
+                    <h5>Nenhuma conta corrente cadastrada</h5>
+                    <p class="mb-3">Cadastre suas contas para visualizar os saldos aqui.</p>
+                    <a href="{{ url_for('contas_bp.gerenciar_contas') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-lg"></i>
+                        Cadastrar Conta
+                    </a>
+                </div>
             </div>
         {% endfor %}
         
         <!-- Card com Total das Contas Corrente -->
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm h-100 border-primary">
-                <div class="card-body d-flex align-items-center bg-light">
-                    <i class="bi bi-wallet2 fs-1 text-primary me-3"></i>
-                    <div>
-                        <h6 class="card-title mb-0 text-primary">Total Contas Corrente</h6>
-                        <p class="card-text fs-5 fw-bold {% if total_contas_corrente < 0 %}text-danger{% else %}text-success{% endif %}">
+        {% if contas %}
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card h-100 border-0 shadow-sm saldo-card">
+                <div class="card-body d-flex align-items-center p-3">
+                    <div class="flex-shrink-0 me-3">
+                        <div class="icon-container bg-white text-primary">
+                            <i class="bi bi-calculator"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 text-white">
+                        <h6 class="card-title mb-1 fw-semibold">Total Geral</h6>
+                        <p class="card-text mb-0 fs-4 fw-bold">
                             {{ total_contas_corrente | currency }}
                         </p>
+                        <small class="opacity-75">Todas as contas</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Seção Principal - Receitas e Despesas -->
+    <div class="row mb-5">
+        <!-- Receitas -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="h5 mb-0 d-flex align-items-center text-success">
+                            <div class="icon-container bg-success bg-opacity-10 text-success me-2">
+                                <i class="bi bi-arrow-up-circle-fill"></i>
+                            </div>
+                            Receitas do Mês
+                        </h4>
+                        <h5 class="text-success mb-0 fw-bold">{{ total_receitas_mes | currency }}</h5>
+                    </div>
+                </div>
+                <div class="card-body pt-3">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="border-0">Data</th>
+                                    <th class="border-0">Descrição</th>
+                                    <th class="border-0">Conta</th>
+                                    <th class="border-0">Valor</th>
+                                    <th class="border-0 text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for receita in receitas %}
+                                    <tr class="{% if receita.status == 'Pago' %}table-success bg-opacity-25{% endif %}">
+                                        <td>
+                                            <div class="d-flex flex-column">
+                                                <span class="fw-medium">{{ receita.data_vencimento.strftime('%d/%m') }}</span>
+                                                <small class="text-muted">{{ receita.data_vencimento.strftime('%Y') }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if receita.subcategoria %}
+                                                    <i class="{{ receita.subcategoria.categoria.icone }} me-2" 
+                                                       style="color: {{ receita.subcategoria.categoria.cor }}; font-size: 1.1rem;"></i>
+                                                {% else %}
+                                                    <i class="bi bi-arrow-left-right me-2 text-muted"></i>
+                                                {% endif %}
+                                                <div>
+                                                    <div class="fw-medium">{{ receita.descricao }}</div>
+                                                    {% if receita.recorrencia and receita.recorrencia.tipo == 'Parcelada' %}
+                                                        {% set parcelas = receita.recorrencia.lancamentos|sort(attribute='data_vencimento') %}
+                                                        {% set index = parcelas.index(receita) + 1 %}
+                                                        <small class="text-muted">Parcela {{ index }}/{{ receita.recorrencia.total_parcelas }}</small>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ receita.conta.nome }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="fw-bold text-success">+ {{ receita.valor | currency }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <form action="{{ url_for('dashboard_bp.marcar_pago', id=receita.id) }}" method="POST" class="d-inline">
+                                                    {% if receita.status == 'Pendente' %}
+                                                        <button type="submit" class="btn btn-outline-success btn-sm" title="Marcar como Realizado">
+                                                            <i class="bi bi-check-circle"></i>
+                                                        </button>
+                                                    {% else %}
+                                                        <button type="submit" class="btn btn-success btn-sm" title="Marcar como Pendente">
+                                                            <i class="bi bi-check-circle-fill"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                </form>
+                                                
+                                                {% if receita.recorrencia_id %}
+                                                    <button type="button" class="btn btn-outline-primary btn-sm" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#modalEditarRecorrencia"
+                                                            data-lancamento-id="{{ receita.id }}"
+                                                            data-recorrencia-id="{{ receita.recorrencia_id }}"
+                                                            data-descricao="{{ receita.recorrencia.descricao_base }}"
+                                                            data-valor="{{ receita.valor }}"
+                                                            data-categoria-id="{{ receita.subcategoria.categoria_id if receita.subcategoria else '' }}"
+                                                            data-subcategoria-id="{{ receita.subcategoria_id }}"
+                                                            data-conta-id="{{ receita.conta_id }}"
+                                                            data-vencimento="{{ receita.data_vencimento.strftime('%Y-%m-%d') }}"
+                                                            title="Editar Recorrência">
+                                                        <i class="bi bi-pencil-fill"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#modalExcluirRecorrencia"
+                                                            data-lancamento-id="{{ receita.id }}"
+                                                            data-recorrencia-id="{{ receita.recorrencia_id }}"
+                                                            data-descricao="{{ receita.descricao }}"
+                                                            data-vencimento="{{ receita.data_vencimento.strftime('%d/%m/%Y') }}"
+                                                            title="Excluir Recorrência">
+                                                        <i class="bi bi-trash-fill"></i>
+                                                    </button>
+                                                {% else %}
+                                                    <button type="button" class="btn btn-outline-primary btn-sm" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#modalEditarUnico"
+                                                            data-lancamento-id="{{ receita.id }}"
+                                                            data-descricao="{{ receita.descricao }}"
+                                                            data-valor="{{ receita.valor }}"
+                                                            data-categoria-id="{{ receita.subcategoria.categoria_id if receita.subcategoria else '' }}"
+                                                            data-subcategoria-id="{{ receita.subcategoria_id }}"
+                                                            data-conta-id="{{ receita.conta_id }}"
+                                                            data-vencimento="{{ receita.data_vencimento.strftime('%Y-%m-%d') }}"
+                                                            title="Editar Lançamento">
+                                                        <i class="bi bi-pencil-fill"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#modalExcluirUnico"
+                                                            data-lancamento-id="{{ receita.id }}"
+                                                            data-descricao="{{ receita.descricao }}"
+                                                            title="Excluir Lançamento">
+                                                        <i class="bi bi-trash-fill"></i>
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4">
+                                            <div class="text-muted">
+                                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                                <p class="mb-0">Nenhuma receita para este mês</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Despesas -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="h5 mb-0 d-flex align-items-center text-danger">
+                            <div class="icon-container bg-danger bg-opacity-10 text-danger me-2">
+                                <i class="bi bi-arrow-down-circle-fill"></i>
+                            </div>
+                            Despesas do Mês
+                        </h4>
+                        <h5 class="text-danger mb-0 fw-bold">{{ total_despesas_completo | currency }}</h5>
+                    </div>
+                </div>
+                <div class="card-body pt-3">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="border-0">Data</th>
+                                    <th class="border-0">Descrição</th>
+                                    <th class="border-0">Conta</th>
+                                    <th class="border-0">Valor</th>
+                                    <th class="border-0 text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set todas_despesas = despesas + faturas_cartoes %}
+                                {% set despesas_ordenadas = todas_despesas|sort(attribute='data_vencimento') %}
+                                
+                                {% for item in despesas_ordenadas %}
+                                    <tr class="{% if item.status == 'Pago' %}table-success bg-opacity-25{% endif %}">
+                                        <td>
+                                            <div class="d-flex flex-column">
+                                                <span class="fw-medium">{{ item.data_vencimento.strftime('%d/%m') }}</span>
+                                                <small class="text-muted">{{ item.data_vencimento.strftime('%Y') }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if item.tipo == 'CartaoCredito' %}
+                                                    <i class="bi bi-credit-card-fill me-2 text-purple" style="color: #6f42c1; font-size: 1.1rem;"></i>
+                                                    <div>
+                                                        <div class="fw-medium">{{ item.descricao }}</div>
+                                                        {% if item.valor == 0 %}
+                                                            <small class="text-muted">Sem gastos no mês</small>
+                                                        {% endif %}
+                                                    </div>
+                                                {% else %}
+                                                    {% if item.subcategoria %}
+                                                        <i class="{{ item.subcategoria.categoria.icone }} me-2" 
+                                                           style="color: {{ item.subcategoria.categoria.cor }}; font-size: 1.1rem;"></i>
+                                                    {% else %}
+                                                        <i class="bi bi-arrow-left-right me-2 text-muted"></i>
+                                                    {% endif %}
+                                                    <div>
+                                                        <div class="fw-medium">{{ item.descricao }}</div>
+                                                        {% if item.recorrencia and item.recorrencia.tipo == 'Parcelada' %}
+                                                            {% set parcelas = item.recorrencia.lancamentos|sort(attribute='data_vencimento') %}
+                                                            {% set index = parcelas.index(item) + 1 %}
+                                                            <small class="text-muted">Parcela {{ index }}/{{ item.recorrencia.total_parcelas }}</small>
+                                                        {% endif %}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {% if item.tipo == 'CartaoCredito' %}
+                                                    {% if item.cartao.conta_pagamento %}
+                                                        {{ item.cartao.conta_pagamento.nome }}
+                                                    {% else %}
+                                                        <span class="text-warning">Conta não definida</span>
+                                                    {% endif %}
+                                                {% else %}
+                                                    {{ item.conta.nome }}
+                                                {% endif %}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <span class="fw-bold text-danger">- {{ item.valor | currency }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            {% if item.tipo == 'CartaoCredito' %}
+                                                {% set fatura_paga = item.cartao.fatura_paga_mes(ano_selecionado, mes_selecionado) %}
+                                                <div class="d-flex flex-column align-items-center">
+                                                    {% if fatura_paga %}
+                                                        <span class="badge bg-success mb-1">
+                                                            <i class="bi bi-check-circle-fill"></i> Paga
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning mb-1">
+                                                            <i class="bi bi-clock"></i> Pendente
+                                                        </span>
+                                                    {% endif %}
+                                                    <a href="{{ url_for('cartoes_bp.extrato_cartao', cartao_id=item.cartao.id, ano=ano_selecionado, mes=mes_selecionado) }}" 
+                                                       class="btn btn-outline-primary btn-sm">
+                                                        <i class="bi bi-file-text"></i>
+                                                    </a>
+                                                </div>
+                                            {% else %}
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <form action="{{ url_for('dashboard_bp.marcar_pago', id=item.id) }}" method="POST" class="d-inline">
+                                                        {% if item.status == 'Pendente' %}
+                                                            <button type="submit" class="btn btn-outline-success btn-sm" title="Marcar como Realizado">
+                                                                <i class="bi bi-check-circle"></i>
+                                                            </button>
+                                                        {% else %}
+                                                            <button type="submit" class="btn btn-success btn-sm" title="Marcar como Pendente">
+                                                                <i class="bi bi-check-circle-fill"></i>
+                                                            </button>
+                                                        {% endif %}
+                                                    </form>
+                                                    
+                                                    {% if item.recorrencia_id %}
+                                                        <button type="button" class="btn btn-outline-primary btn-sm" 
+                                                                data-bs-toggle="modal" 
+                                                                data-bs-target="#modalEditarRecorrencia"
+                                                                data-lancamento-id="{{ item.id }}"
+                                                                data-recorrencia-id="{{ item.recorrencia_id }}"
+                                                                data-descricao="{{ item.recorrencia.descricao_base }}"
+                                                                data-valor="{{ item.valor }}"
+                                                                data-categoria-id="{{ item.subcategoria.categoria_id if item.subcategoria else '' }}"
+                                                                data-subcategoria-id="{{ item.subcategoria_id }}"
+                                                                {% if item.cartao_credito_id %}
+                                                                    data-cartao-id="{{ item.cartao_credito_id }}"
+                                                                    data-conta-id=""
+                                                                {% else %}
+                                                                    data-conta-id="{{ item.conta_id }}"
+                                                                    data-cartao-id=""
+                                                                {% endif %}
+                                                                data-vencimento="{{ item.data_vencimento.strftime('%Y-%m-%d') }}"
+                                                                title="Editar Recorrência">
+                                                            <i class="bi bi-pencil-fill"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                                data-bs-toggle="modal" 
+                                                                data-bs-target="#modalExcluirRecorrencia"
+                                                                data-lancamento-id="{{ item.id }}"
+                                                                data-recorrencia-id="{{ item.recorrencia_id }}"
+                                                                data-descricao="{{ item.descricao }}"
+                                                                data-vencimento="{{ item.data_vencimento.strftime('%d/%m/%Y') }}"
+                                                                title="Excluir Recorrência">
+                                                            <i class="bi bi-trash-fill"></i>
+                                                        </button>
+                                                    {% else %}
+                                                        <button type="button" class="btn btn-outline-primary btn-sm" 
+                                                                data-bs-toggle="modal" 
+                                                                data-bs-target="#modalEditarUnico"
+                                                                data-lancamento-id="{{ item.id }}"
+                                                                data-descricao="{{ item.descricao }}"
+                                                                data-valor="{{ item.valor }}"
+                                                                data-categoria-id="{{ item.subcategoria.categoria_id if item.subcategoria else '' }}"
+                                                                data-subcategoria-id="{{ item.subcategoria_id }}"
+                                                                {% if item.cartao_credito_id %}
+                                                                    data-cartao-id="{{ item.cartao_credito_id }}"
+                                                                    data-conta-id=""
+                                                                {% else %}
+                                                                    data-conta-id="{{ item.conta_id }}"
+                                                                    data-cartao-id=""
+                                                                {% endif %}
+                                                                data-vencimento="{{ item.data_vencimento.strftime('%Y-%m-%d') }}"
+                                                                title="Editar Lançamento">
+                                                            <i class="bi bi-pencil-fill"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                                data-bs-toggle="modal" 
+                                                                data-bs-target="#modalExcluirUnico"
+                                                                data-lancamento-id="{{ item.id }}"
+                                                                data-descricao="{{ item.descricao }}"
+                                                                title="Excluir Lançamento">
+                                                            <i class="bi bi-trash-fill"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4">
+                                            <div class="text-muted">
+                                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                                <p class="mb-0">Nenhuma despesa para este mês</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Resumo Financeiro Modernizado -->
     <div class="row">
-        <div class="col-lg-6 mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4><i class="bi bi-arrow-up-circle-fill text-success"></i> Receitas do Mês</h4>
-                <h5 class="text-success mb-0">{{ total_receitas_mes | currency }}</h5>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-sm table-hover align-middle">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Venc.</th>
-                            <th>Descrição</th>
-                            <th>Conta</th>
-                            <th>Valor</th>
-                            <th class="text-center">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for receita in receitas %}
-                            <tr class="{% if receita.status == 'Pago' %}table-success text-muted{% endif %}">
-                                <td>{{ receita.data_vencimento.strftime('%d/%m') }}</td>
-                                <td>
-                                    {% if receita.subcategoria %}
-                                        <i class="{{ receita.subcategoria.categoria.icone }}" style="color: {{ receita.subcategoria.categoria.cor }};"></i>
-                                    {% else %}
-                                        <i class="bi bi-arrow-left-right"></i>
-                                    {% endif %}
-                                    {{ receita.descricao }}
-                                    {% if receita.recorrencia and receita.recorrencia.tipo == 'Parcelada' %}
-                                        {% set parcelas = receita.recorrencia.lancamentos|sort(attribute='data_vencimento') %}
-                                        {% set index = parcelas.index(receita) + 1 %}
-                                        <small class="text-muted">({{ index }}/{{ receita.recorrencia.total_parcelas }})</small>
-                                    {% endif %}
-                                </td>
-                                <td>{{ receita.conta.nome }}</td>
-                                <td class="text-success">+ {{ receita.valor | currency }}</td>
-                                <td class="text-center">
-                                    <form action="{{ url_for('dashboard_bp.marcar_pago', id=receita.id) }}" method="POST" class="d-inline">
-                                        {% if receita.status == 'Pendente' %}
-                                            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Marcar como Realizado"><i class="bi bi-check-circle"></i></button>
-                                        {% else %}
-                                            <button type="submit" class="btn btn-sm btn-success" title="Marcar como Pendente"><i class="bi bi-check-circle-fill"></i></button>
-                                        {% endif %}
-                                    </form>
-                                    
-                                    {% if receita.recorrencia_id %}
-                                        <!-- Lançamento de Recorrência -->
-                                        <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                data-bs-toggle="modal" 
-                                                data-bs-target="#modalEditarRecorrencia"
-                                                data-lancamento-id="{{ receita.id }}"
-                                                data-recorrencia-id="{{ receita.recorrencia_id }}"
-                                                data-descricao="{{ receita.recorrencia.descricao_base }}"
-                                                data-valor="{{ receita.valor }}"
-                                                data-categoria-id="{{ receita.subcategoria.categoria_id if receita.subcategoria else '' }}"
-                                                data-subcategoria-id="{{ receita.subcategoria_id }}"
-                                                data-conta-id="{{ receita.conta_id }}"
-                                                data-vencimento="{{ receita.data_vencimento.strftime('%Y-%m-%d') }}"
-                                                title="Editar Recorrência">
-                                            <i class="bi bi-pencil-fill"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                data-bs-toggle="modal" 
-                                                data-bs-target="#modalExcluirRecorrencia"
-                                                data-lancamento-id="{{ receita.id }}"
-                                                data-recorrencia-id="{{ receita.recorrencia_id }}"
-                                                data-descricao="{{ receita.descricao }}"
-                                                data-vencimento="{{ receita.data_vencimento.strftime('%d/%m/%Y') }}"
-                                                title="Excluir Recorrência">
-                                            <i class="bi bi-trash-fill"></i>
-                                        </button>
-                                    {% else %}
-                                        <!-- Lançamento Único -->
-                                        <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                data-bs-toggle="modal" 
-                                                data-bs-target="#modalEditarUnico"
-                                                data-lancamento-id="{{ receita.id }}"
-                                                data-descricao="{{ receita.descricao }}"
-                                                data-valor="{{ receita.valor }}"
-                                                data-categoria-id="{{ receita.subcategoria.categoria_id if receita.subcategoria else '' }}"
-                                                data-subcategoria-id="{{ receita.subcategoria_id }}"
-                                                data-conta-id="{{ receita.conta_id }}"
-                                                data-vencimento="{{ receita.data_vencimento.strftime('%Y-%m-%d') }}"
-                                                title="Editar Lançamento">
-                                            <i class="bi bi-pencil-fill"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                data-bs-toggle="modal" 
-                                                data-bs-target="#modalExcluirUnico"
-                                                data-lancamento-id="{{ receita.id }}"
-                                                data-descricao="{{ receita.descricao }}"
-                                                title="Excluir Lançamento">
-                                            <i class="bi bi-trash-fill"></i>
-                                        </button>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% else %}
-                            <tr><td colspan="5" class="text-center">Nenhuma receita para este mês.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <div class="col-lg-6 mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4><i class="bi bi-arrow-down-circle-fill text-danger"></i> Despesas do Mês</h4>
-                <h5 class="text-danger mb-0">{{ total_despesas_completo | currency }}</h5>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-sm table-hover align-middle">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Venc.</th>
-                            <th>Descrição</th>
-                            <th>Conta</th>
-                            <th>Valor</th>
-                            <th class="text-center">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% set todas_despesas = despesas + faturas_cartoes %}
-                        {% set despesas_ordenadas = todas_despesas|sort(attribute='data_vencimento') %}
-                        
-                        {% for item in despesas_ordenadas %}
-                            <tr class="{% if item.status == 'Pago' %}table-success text-muted{% endif %}">
-                                <td>{{ item.data_vencimento.strftime('%d/%m') }}</td>
-                                <td>
-                                    {% if item.tipo == 'CartaoCredito' %}
-                                        <i class="bi bi-credit-card-fill" style="color: #6f42c1;"></i>
-                                        {{ item.descricao }}
-                                        {% if item.valor == 0 %}
-                                            <small class="text-muted">(sem gastos)</small>
-                                        {% endif %}
-                                    {% else %}
-                                        {% if item.subcategoria %}
-                                            <i class="{{ item.subcategoria.categoria.icone }}" style="color: {{ item.subcategoria.categoria.cor }};"></i>
-                                        {% else %}
-                                            <i class="bi bi-arrow-left-right"></i>
-                                        {% endif %}
-                                        {{ item.descricao }}
-                                        {% if item.recorrencia and item.recorrencia.tipo == 'Parcelada' %}
-                                            {% set parcelas = item.recorrencia.lancamentos|sort(attribute='data_vencimento') %}
-                                            {% set index = parcelas.index(item) + 1 %}
-                                            <small class="text-muted">({{ index }}/{{ item.recorrencia.total_parcelas }})</small>
-                                        {% endif %}
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if item.tipo == 'CartaoCredito' %}
-                                        {% if item.cartao.conta_pagamento %}
-                                            {{ item.cartao.conta_pagamento.nome }}
-                                        {% else %}
-                                            <span class="text-warning">Conta não definida</span>
-                                        {% endif %}
-                                    {% else %}
-                                        {{ item.conta.nome }}
-                                    {% endif %}
-                                </td>
-                                <td class="text-danger">- {{ item.valor | currency }}</td>
-                                <td class="text-center">
-                                    {% if item.tipo == 'CartaoCredito' %}
-                                        <!-- Faturas de cartão - apenas mostrar status -->
-                                        {% set fatura_paga = item.cartao.fatura_paga_mes(ano_selecionado, mes_selecionado) %}
-                                        {% if fatura_paga %}
-                                            <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Paga</span>
-                                        {% else %}
-                                            <span class="badge bg-warning"><i class="bi bi-clock"></i> Pendente</span>
-                                        {% endif %}
-                                        <br>
-                                        <small class="text-muted">Gerencie no <a href="{{ url_for('cartoes_bp.extrato_cartao', cartao_id=item.cartao.id, ano=ano_selecionado, mes=mes_selecionado) }}">extrato</a></small>
-                                    {% else %}
-                                        <!-- Lançamentos normais - botões funcionais -->
-                                        <form action="{{ url_for('dashboard_bp.marcar_pago', id=item.id) }}" method="POST" class="d-inline">
-                                            {% if item.status == 'Pendente' %}
-                                                <button type="submit" class="btn btn-sm btn-outline-secondary" title="Marcar como Realizado"><i class="bi bi-check-circle"></i></button>
-                                            {% else %}
-                                                <button type="submit" class="btn btn-sm btn-success" title="Marcar como Pendente"><i class="bi bi-check-circle-fill"></i></button>
-                                            {% endif %}
-                                        </form>
-                                        
-                                        {% if item.recorrencia_id %}
-                                            <!-- Lançamento de Recorrência -->
-                                            <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="#modalEditarRecorrencia"
-                                                    data-lancamento-id="{{ item.id }}"
-                                                    data-recorrencia-id="{{ item.recorrencia_id }}"
-                                                    data-descricao="{{ item.recorrencia.descricao_base }}"
-                                                    data-valor="{{ item.valor }}"
-                                                    data-categoria-id="{{ item.subcategoria.categoria_id if item.subcategoria else '' }}"
-                                                    data-subcategoria-id="{{ item.subcategoria_id }}"
-                                                    {% if item.cartao_credito_id %}
-                                                        data-cartao-id="{{ item.cartao_credito_id }}"
-                                                        data-conta-id=""
-                                                    {% else %}
-                                                        data-conta-id="{{ item.conta_id }}"
-                                                        data-cartao-id=""
-                                                    {% endif %}
-                                                    data-vencimento="{{ item.data_vencimento.strftime('%Y-%m-%d') }}"
-                                                    title="Editar Recorrência">
-                                                <i class="bi bi-pencil-fill"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="#modalExcluirRecorrencia"
-                                                    data-lancamento-id="{{ item.id }}"
-                                                    data-recorrencia-id="{{ item.recorrencia_id }}"
-                                                    data-descricao="{{ item.descricao }}"
-                                                    data-vencimento="{{ item.data_vencimento.strftime('%d/%m/%Y') }}"
-                                                    title="Excluir Recorrência">
-                                                <i class="bi bi-trash-fill"></i>
-                                            </button>
-                                        {% else %}
-                                            <!-- Lançamento Único -->
-                                            <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="#modalEditarUnico"
-                                                    data-lancamento-id="{{ item.id }}"
-                                                    data-descricao="{{ item.descricao }}"
-                                                    data-valor="{{ item.valor }}"
-                                                    data-categoria-id="{{ item.subcategoria.categoria_id if item.subcategoria else '' }}"
-                                                    data-subcategoria-id="{{ item.subcategoria_id }}"
-                                                    {% if item.cartao_credito_id %}
-                                                        data-cartao-id="{{ item.cartao_credito_id }}"
-                                                        data-conta-id=""
-                                                    {% else %}
-                                                        data-conta-id="{{ item.conta_id }}"
-                                                        data-cartao-id=""
-                                                    {% endif %}
-                                                    data-vencimento="{{ item.data_vencimento.strftime('%Y-%m-%d') }}"
-                                                    title="Editar Lançamento">
-                                                <i class="bi bi-pencil-fill"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="#modalExcluirUnico"
-                                                    data-lancamento-id="{{ item.id }}"
-                                                    data-descricao="{{ item.descricao }}"
-                                                    title="Excluir Lançamento">
-                                                <i class="bi bi-trash-fill"></i>
-                                            </button>
-                                        {% endif %}
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% else %}
-                            <tr><td colspan="5" class="text-center">Nenhuma despesa para este mês.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Rodapé com Resumo Financeiro -->
-    <div class="row mt-5 mb-4">
         <div class="col-12">
-            <div class="card shadow-sm border-dark">
-                <div class="card-body bg-light">
-                    <h5 class="card-title text-center mb-4">
-                        <i class="bi bi-calculator"></i> Resumo Financeiro - {{ meses_disponiveis[mes_selecionado-1].nome }}/{{ ano_selecionado }}
+            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white">
+                    <h5 class="card-title text-center mb-4 d-flex align-items-center justify-content-center">
+                        <div class="icon-container bg-white text-primary me-2">
+                            <i class="bi bi-calculator"></i>
+                        </div>
+                        Resumo Financeiro - {{ meses_disponiveis[mes_selecionado-1].nome }}/{{ ano_selecionado }}
                     </h5>
                     <div class="row text-center">
-                        <div class="col-md-3">
-                            <div class="border-end">
-                                <h6 class="text-muted mb-1">Receitas do Mês</h6>
-                                <h4 class="text-success mb-0">{{ total_receitas_mes | currency }}</h4>
+                        <div class="col-md-3 mb-3">
+                            <div class="bg-white bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-arrow-up-circle-fill fs-2 text-success-emphasis mb-2 d-block"></i>
+                                <h6 class="mb-1 opacity-75 text-uppercase small">Receitas</h6>
+                                <h4 class="mb-0 fw-bold">{{ total_receitas_mes | currency }}</h4>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="border-end">
-                                <h6 class="text-muted mb-1">Despesas do Mês</h6>
-                                <h4 class="text-danger mb-0">{{ total_despesas_completo | currency }}</h4>
+                        <div class="col-md-3 mb-3">
+                            <div class="bg-white bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-arrow-down-circle-fill fs-2 text-danger-emphasis mb-2 d-block"></i>
+                                <h6 class="mb-1 opacity-75 text-uppercase small">Despesas</h6>
+                                <h4 class="mb-0 fw-bold">{{ total_despesas_completo | currency }}</h4>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="border-end">
-                                <h6 class="text-muted mb-1">Resultado do Mês</h6>
+                        <div class="col-md-3 mb-3">
+                            <div class="bg-white bg-opacity-10 p-3 rounded">
                                 {% set resultado_mes = total_receitas_mes - total_despesas_completo %}
-                                <h4 class="{% if resultado_mes >= 0 %}text-success{% else %}text-danger{% endif %} mb-0">
-                                    {{ resultado_mes | currency }}
-                                </h4>
+                                <i class="bi bi-{% if resultado_mes >= 0 %}graph-up{% else %}graph-down{% endif %} fs-2 {% if resultado_mes >= 0 %}text-success-emphasis{% else %}text-danger-emphasis{% endif %} mb-2 d-block"></i>
+                                <h6 class="mb-1 opacity-75 text-uppercase small">Resultado</h6>
+                                <h4 class="mb-0 fw-bold">{{ resultado_mes | currency }}</h4>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <h6 class="text-muted mb-1">Projeção Próximo Mês</h6>
-                            {% set projecao_proximo = total_contas_corrente + receitas_pendentes - total_despesas_pendentes %}
-                            <h4 class="{% if projecao_proximo >= 0 %}text-primary{% else %}text-danger{% endif %} mb-0">
-                                {{ projecao_proximo | currency }}
-                            </h4>
+                        <div class="col-md-3 mb-3">
+                            <div class="bg-white bg-opacity-10 p-3 rounded">
+                                {% set projecao_proximo = total_contas_corrente + receitas_pendentes - total_despesas_pendentes %}
+                                <i class="bi bi-crystal-ball fs-2 text-info-emphasis mb-2 d-block"></i>
+                                <h6 class="mb-1 opacity-75 text-uppercase small">Projeção</h6>
+                                <h4 class="mb-0 fw-bold">{{ projecao_proximo | currency }}</h4>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -368,12 +523,16 @@
     </div>
 </div>
 
+<!-- Modais (mantidos os mesmos do original) -->
 <!-- Modal para Editar Lançamento Único -->
 <div class="modal fade" id="modalEditarUnico" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
+        <div class="modal-content border-0 shadow-lg">
             <div class="modal-header">
-                <h5 class="modal-title">Editar Lançamento</h5>
+                <h5 class="modal-title d-flex align-items-center">
+                    <i class="bi bi-pencil-fill me-2 text-primary"></i>
+                    Editar Lançamento
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ url_for('dashboard_bp.editar_lancamento_dashboard') }}">
@@ -431,7 +590,10 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg"></i>
+                        Salvar Alterações
+                    </button>
                 </div>
             </form>
         </div>
@@ -441,9 +603,12 @@
 <!-- Modal para Excluir Lançamento Único -->
 <div class="modal fade" id="modalExcluirUnico" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content border-0 shadow-lg">
             <div class="modal-header">
-                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <h5 class="modal-title d-flex align-items-center text-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    Confirmar Exclusão
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ url_for('dashboard_bp.excluir_lancamento_dashboard') }}">
@@ -452,14 +617,20 @@
                     <input type="hidden" name="tipo_exclusao" value="unico">
                     
                     <p>Você está prestes a deletar o lançamento:</p>
-                    <div class="alert alert-warning">
+                    <div class="alert alert-warning border-0">
                         <strong id="del_unico_descricao"></strong>
                     </div>
-                    <p class="text-danger">Esta ação não pode ser desfeita.</p>
+                    <p class="text-danger mb-0">
+                        <i class="bi bi-exclamation-circle me-1"></i>
+                        Esta ação não pode ser desfeita.
+                    </p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-danger">Confirmar Exclusão</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash-fill"></i>
+                        Confirmar Exclusão
+                    </button>
                 </div>
             </form>
         </div>
@@ -469,9 +640,12 @@
 <!-- Modal para Editar Recorrência -->
 <div class="modal fade" id="modalEditarRecorrencia" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
+        <div class="modal-content border-0 shadow-lg">
             <div class="modal-header">
-                <h5 class="modal-title">Editar Recorrência</h5>
+                <h5 class="modal-title d-flex align-items-center">
+                    <i class="bi bi-arrow-repeat me-2 text-primary"></i>
+                    Editar Recorrência
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ url_for('dashboard_bp.editar_lancamento_dashboard') }}">
@@ -527,25 +701,30 @@
                         </div>
                     </div>
                     
-                    <fieldset class="mb-3">
-                        <legend class="fs-6">Escopo da Edição</legend>
-                        <div class="form-check">
+                    <div class="border rounded p-3 bg-light">
+                        <h6 class="mb-3">Escopo da Edição</h6>
+                        <div class="form-check mb-2">
                             <input class="form-check-input" type="radio" name="tipo_edicao" id="edicao_mes" value="apenas_mes" checked>
                             <label class="form-check-label" for="edicao_mes">
+                                <i class="bi bi-calendar-event me-1"></i>
                                 Editar apenas este mês
                             </label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="tipo_edicao" id="edicao_futuros" value="futuros">
                             <label class="form-check-label" for="edicao_futuros">
+                                <i class="bi bi-calendar-range me-1"></i>
                                 Editar a partir deste mês (futuros)
                             </label>
                         </div>
-                    </fieldset>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg"></i>
+                        Salvar Alterações
+                    </button>
                 </div>
             </form>
         </div>
@@ -555,9 +734,12 @@
 <!-- Modal para Excluir Recorrência -->
 <div class="modal fade" id="modalExcluirRecorrencia" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content border-0 shadow-lg">
             <div class="modal-header">
-                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <h5 class="modal-title d-flex align-items-center text-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    Confirmar Exclusão
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ url_for('dashboard_bp.excluir_lancamento_dashboard') }}">
@@ -566,36 +748,42 @@
                     <input type="hidden" name="recorrencia_id" id="del_rec_recorrencia_id">
                     
                     <p>Você está prestes a deletar o lançamento:</p>
-                    <div class="alert alert-warning">
+                    <div class="alert alert-warning border-0">
                         <strong id="del_rec_descricao"></strong><br>
                         <small>Vencimento: <span id="del_rec_vencimento"></span></small>
                     </div>
                     
-                    <fieldset>
-                        <legend class="fs-6">Escopo da Exclusão</legend>
-                        <div class="form-check">
+                    <div class="border rounded p-3 bg-light">
+                        <h6 class="mb-3">Escopo da Exclusão</h6>
+                        <div class="form-check mb-2">
                             <input class="form-check-input" type="radio" name="tipo_exclusao" id="exclusao_mes" value="apenas_mes" checked>
                             <label class="form-check-label" for="exclusao_mes">
+                                <i class="bi bi-calendar-event me-1"></i>
                                 Excluir apenas este mês
                             </label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="tipo_exclusao" id="exclusao_futuros" value="futuros">
                             <label class="form-check-label" for="exclusao_futuros">
+                                <i class="bi bi-calendar-range me-1"></i>
                                 Excluir a partir deste mês (futuros)
                             </label>
                         </div>
-                    </fieldset>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-danger">Confirmar Exclusão</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash-fill"></i>
+                        Confirmar Exclusão
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+<!-- Scripts mantidos os mesmos do original -->
 <script>
 // Script para gerenciar os modais do dashboard
 document.addEventListener('DOMContentLoaded', function() {
@@ -741,5 +929,46 @@ document.getElementById('edit_unico_categoria')?.addEventListener('change', func
 document.getElementById('edit_rec_categoria')?.addEventListener('change', function() {
     carregarSubcategorias('edit_rec_categoria', 'edit_rec_subcategoria');
 });
+
+// Adicionar animações aos cards de conta
+document.addEventListener('DOMContentLoaded', function() {
+    const contaCards = document.querySelectorAll('.conta-card');
+    contaCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.classList.add('fade-in');
+    });
+});
 </script>
+
+{% block scripts %}
+<style>
+.conta-card {
+    transition: var(--transition);
+}
+
+.conta-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.dashboard-container {
+    max-width: 100%;
+}
+
+@media (max-width: 768px) {
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.4rem;
+        font-size: 0.7rem;
+    }
+    
+    .table-responsive {
+        border-radius: var(--border-radius-sm);
+    }
+}
+
+.text-purple {
+    color: #6f42c1 !important;
+}
+</style>
+{% endblock %}
 {% endblock %}
