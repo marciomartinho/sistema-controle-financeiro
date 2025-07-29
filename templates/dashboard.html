@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('dashboard_bp.dashboard') }}" class="row g-3 align-items-center">
+                <div class="col-auto">
+                    <label for="mes" class="form-label fw-bold">Mês:</label>
+                    <select name="mes" id="mes" class="form-select" onchange="this.form.submit()">
+                        {% for mes in meses_disponiveis %}
+                            <option value="{{ mes.id }}" {% if mes.id == mes_selecionado %}selected{% endif %}>{{ mes.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <label for="ano" class="form-label fw-bold">Ano:</label>
+                    <select name="ano" id="ano" class="form-select" onchange="this.form.submit()">
+                        {% for ano in anos_disponiveis %}
+                            <option value="{{ ano }}" {% if ano == ano_selecionado %}selected{% endif %}>{{ ano }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto ms-auto">
+                    <a href="{{ url_for('dashboard_bp.dashboard') }}" class="btn btn-outline-secondary">Mês Atual</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <h3 class="mb-3">Saldos Atuais (Contas Corrente)</h3>
+    <div class="row mb-5">
+        {% for conta in contas %}
+            <div class="col-md-4 mb-3">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body d-flex align-items-center">
+                        {% if conta.logo_imagem %}
+                            <img src="{{ url_for('static', filename='uploads/' + conta.logo_imagem) }}" alt="Logo" style="width: 40px; height: auto; margin-right: 15px; border-radius: 5px;">
+                        {% endif %}
+                        <div>
+                            <h5 class="card-title mb-0">{{ conta.nome }}</h5>
+                            <p class="card-text fs-4 fw-bold {% if conta.saldo_atual < 0 %}text-danger{% else %}text-success{% endif %}">
+                                {{ conta.saldo_atual | currency }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-12">
+                <p class="text-muted">Nenhuma conta corrente cadastrada para exibir o saldo.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <h4><i class="bi bi-arrow-up-circle-fill text-success"></i> Receitas do Mês</h4>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Venc.</th>
+                            <th>Descrição</th>
+                            <th>Conta</th>
+                            <th>Valor</th>
+                            <th class="text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for receita in receitas %}
+                            <tr class="{% if receita.status == 'Pago' %}table-success text-muted{% endif %}">
+                                <td>{{ receita.data_vencimento.strftime('%d/%m') }}</td>
+                                <td>
+                                    {% if receita.subcategoria %}
+                                        <i class="{{ receita.subcategoria.categoria.icone }}" style="color: {{ receita.subcategoria.categoria.cor }};"></i>
+                                    {% else %}
+                                        <i class="bi bi-arrow-left-right"></i>
+                                    {% endif %}
+                                    {{ receita.descricao }}
+                                    {% if receita.recorrencia and receita.recorrencia.tipo == 'Parcelada' %}
+                                        {% set parcelas = receita.recorrencia.lancamentos|sort(attribute='data_vencimento') %}
+                                        {% set index = parcelas.index(receita) + 1 %}
+                                        <small class="text-muted">({{ index }}/{{ receita.recorrencia.total_parcelas }})</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ receita.conta.nome }}</td>
+                                <td class="text-success">+ {{ receita.valor | currency }}</td>
+                                <td class="text-center">
+                                    <form action="{{ url_for('dashboard_bp.marcar_pago', id=receita.id) }}" method="POST" class="d-inline">
+                                        {% if receita.status == 'Pendente' %}
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Marcar como Realizado"><i class="bi bi-check-circle"></i></button>
+                                        {% else %}
+                                            <button type="submit" class="btn btn-sm btn-success" title="Marcar como Pendente"><i class="bi bi-check-circle-fill"></i></button>
+                                        {% endif %}
+                                    </form>
+                                    <button class="btn btn-sm btn-outline-primary" disabled><i class="bi bi-pencil"></i></button>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="5" class="text-center">Nenhuma receita para este mês.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <h4><i class="bi bi-arrow-down-circle-fill text-danger"></i> Despesas do Mês</h4>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Venc.</th>
+                            <th>Descrição</th>
+                            <th>Conta</th>
+                            <th>Valor</th>
+                            <th class="text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for despesa in despesas %}
+                            <tr class="{% if despesa.status == 'Pago' %}table-success text-muted{% endif %}">
+                                <td>{{ despesa.data_vencimento.strftime('%d/%m') }}</td>
+                                <td>
+                                    {% if despesa.subcategoria %}
+                                        <i class="{{ despesa.subcategoria.categoria.icone }}" style="color: {{ despesa.subcategoria.categoria.cor }};"></i>
+                                    {% else %}
+                                        <i class="bi bi-arrow-left-right"></i>
+                                    {% endif %}
+                                    {{ despesa.descricao }}
+                                    {% if despesa.recorrencia and despesa.recorrencia.tipo == 'Parcelada' %}
+                                        {% set parcelas = despesa.recorrencia.lancamentos|sort(attribute='data_vencimento') %}
+                                        {% set index = parcelas.index(despesa) + 1 %}
+                                        <small class="text-muted">({{ index }}/{{ despesa.recorrencia.total_parcelas }})</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ despesa.conta.nome }}</td>
+                                <td class="text-danger">- {{ despesa.valor | currency }}</td>
+                                <td class="text-center">
+                                    <form action="{{ url_for('dashboard_bp.marcar_pago', id=despesa.id) }}" method="POST" class="d-inline">
+                                        {% if despesa.status == 'Pendente' %}
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Marcar como Realizado"><i class="bi bi-check-circle"></i></button>
+                                        {% else %}
+                                            <button type="submit" class="btn btn-sm btn-success" title="Marcar como Pendente"><i class="bi bi-check-circle-fill"></i></button>
+                                        {% endif %}
+                                    </form>
+                                    <button class="btn btn-sm btn-outline-primary" disabled><i class="bi bi-pencil"></i></button>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="5" class="text-center">Nenhuma despesa para este mês.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -4,7 +4,7 @@
 <div class="card shadow-sm mb-4">
     <div class="card-header"><h2 class="h5 mb-0">Novo Lançamento</h2></div>
     <div class="card-body">
-        <form action="{{ url_for('lancamentos_bp.gerenciar_lancamentos') }}" method="POST">
+        <form id="form-lancamento" action="{{ url_for('lancamentos_bp.gerenciar_lancamentos') }}" method="POST">
             <div class="row mb-3">
                 <div class="col">
                     <div class="form-check form-check-inline">
@@ -15,45 +15,38 @@
                         <input class="form-check-input" type="radio" name="tipo_lancamento" id="tipo_receita" value="Receita">
                         <label class="form-check-label" for="tipo_receita">Receita</label>
                     </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="tipo_lancamento" id="tipo_transferencia" value="Transferencia">
+                        <label class="form-check-label" for="tipo_transferencia">Transferência</label>
+                    </div>
                 </div>
             </div>
+            
             <div class="row">
                 <div class="col-md-6 mb-3"><label for="descricao" class="form-label">Descrição</label><input type="text" class="form-control" name="descricao" id="descricao" required></div>
                 <div class="col-md-3 mb-3"><label for="valor" class="form-label">Valor (R$)</label><input type="number" step="0.01" class="form-control" name="valor" id="valor" required></div>
-                <div class="col-md-3 mb-3"><label for="data_vencimento" class="form-label">Data de Vencimento</label><input type="date" class="form-control" name="data_vencimento" id="data_vencimento" required></div>
+                <div class="col-md-3 mb-3"><label for="data_vencimento" class="form-label">Data</label><input type="date" class="form-control" name="data_vencimento" id="data_vencimento" required></div>
             </div>
-            <div class="row">
-                <div class="col-md-4 mb-3"><label for="categoria" class="form-label">Categoria</label><select class="form-select" name="categoria" id="categoria" required><option value="">Selecione...</option>{% for cat in categorias %}<option value="{{ cat.id }}">{{ cat.nome }}</option>{% endfor %}</select></div>
-                <div class="col-md-4 mb-3"><label for="subcategoria_id" class="form-label">Subcategoria</label><select class="form-select" name="subcategoria_id" id="subcategoria" required disabled><option value="">Selecione uma categoria primeiro</option></select></div>
-                <div class="col-md-4 mb-3"><label for="conta_id" class="form-label">Conta</label><select class="form-select" name="conta_id" id="conta" required><option value="">Selecione...</option>{% for conta in contas %}<option value="{{ conta.id }}">{{ conta.nome }}</option>{% endfor %}</select></div>
+            
+            <div id="campos_receita_despesa">
+                <div class="row">
+                    <div class="col-md-4 mb-3"><label for="categoria" class="form-label">Categoria</label><select class="form-select" name="categoria" id="categoria" required><option value="">Selecione...</option>{% for cat in categorias %}<option value="{{ cat.id }}">{{ cat.nome }}</option>{% endfor %}</select></div>
+                    <div class="col-md-4 mb-3"><label for="subcategoria_id" class="form-label">Subcategoria</label><select class="form-select" name="subcategoria_id" id="subcategoria" required disabled><option value="">Selecione uma categoria primeiro</option></select></div>
+                    <div class="col-md-4 mb-3"><label for="conta_id" class="form-label">Conta</label><select class="form-select" name="conta_id" id="conta_id_rd" required><option value="">Selecione...</option>{% for conta in contas %}<option value="{{ conta.id }}">{{ conta.nome }}</option>{% endfor %}</select></div>
+                </div>
+                <fieldset class="row mb-3"><legend class="col-form-label col-sm-2 pt-0">Recorrência</legend><div class="col-sm-10"><div class="form-check"><input class="form-check-input" type="radio" name="recorrencia_tipo" id="recorrencia_nao" value="unica" checked><label class="form-check-label" for="recorrencia_nao">Única Vez</label></div><div class="form-check"><input class="form-check-input" type="radio" name="recorrencia_tipo" id="recorrencia_fixa" value="fixa"><label class="form-check-label" for="recorrencia_fixa">Fixa Mensal</label></div><div class="form-check"><input class="form-check-input" type="radio" name="recorrencia_tipo" id="recorrencia_parcelada" value="parcelada"><label class="form-check-label" for="recorrencia_parcelada">Parcelada</label></div></div></fieldset>
+                <div class="row g-3" id="campos_parcelamento" style="display: none;"><div class="col-md-3"><label for="num_parcelas" class="form-label">Nº de Parcelas</label><input type="number" class="form-control" name="num_parcelas" id="num_parcelas" min="2" value="2"></div><div class="col-md-3"><label for="frequencia" class="form-label">Frequência</label><select class="form-select" name="frequencia" id="frequencia"><option value="Mensal" selected>Mensal</option><option value="Semanal">Semanal</option><option value="Quinzenal">Quinzenal</option><option value="Anual">Anual</option></select></div></div>
             </div>
-            <fieldset class="row mb-3">
-                <legend class="col-form-label col-sm-2 pt-0">Recorrência</legend>
-                <div class="col-sm-10">
-                    <div class="form-check"><input class="form-check-input" type="radio" name="recorrencia_tipo" id="recorrencia_nao" value="unica" checked><label class="form-check-label" for="recorrencia_nao">Única Vez</label></div>
-                    <div class="form-check"><input class="form-check-input" type="radio" name="recorrencia_tipo" id="recorrencia_fixa" value="fixa"><label class="form-check-label" for="recorrencia_fixa">Fixa Mensal</label></div>
-                    <div class="form-check"><input class="form-check-input" type="radio" name="recorrencia_tipo" id="recorrencia_parcelada" value="parcelada"><label class="form-check-label" for="recorrencia_parcelada">Parcelada</label></div>
-                </div>
-            </fieldset>
-            <div class="row g-3" id="campos_parcelamento" style="display: none;">
-                <div class="col-md-3">
-                    <label for="num_parcelas" class="form-label">Nº de Parcelas</label>
-                    <input type="number" class="form-control" name="num_parcelas" id="num_parcelas" min="2" value="2">
-                </div>
-                <div class="col-md-3">
-                    <label for="frequencia" class="form-label">Frequência</label>
-                    <select class="form-select" name="frequencia" id="frequencia">
-                        <option value="Mensal" selected>Mensal</option>
-                        <option value="Semanal">Semanal</option>
-                        <option value="Quinzenal">Quinzenal</option>
-                        <option value="Anual">Anual</option>
-                    </select>
+
+            <div id="campos_transferencia" style="display: none;">
+                <div class="row">
+                    <div class="col-md-6 mb-3"><label for="conta_origem_id" class="form-label">De (Conta de Origem)</label><select class="form-select" name="conta_origem_id" id="conta_origem_id" disabled><option value="">Selecione...</option>{% for conta in contas %}<option value="{{ conta.id }}">{{ conta.nome }}</option>{% endfor %}</select></div>
+                    <div class="col-md-6 mb-3"><label for="conta_destino_id" class="form-label">Para (Conta de Destino)</label><select class="form-select" name="conta_destino_id" id="conta_destino_id" disabled><option value="">Selecione...</option>{% for conta in contas %}<option value="{{ conta.id }}">{{ conta.nome }}</option>{% endfor %}</select></div>
                 </div>
             </div>
+
             <hr>
-            <div class="d-flex justify-content-end">
-                <button type="submit" class="btn btn-primary">Salvar Lançamento</button>
-            </div>
+            <div class="d-flex justify-content-end"><button type="submit" class="btn btn-primary">Salvar Lançamento</button></div>
         </form>
     </div>
 </div>
@@ -72,6 +65,29 @@
         </tr>
     </thead>
     <tbody>
+        {% for transferencia in transferencias %}
+            {% set saida = (transferencia.lancamentos|selectattr('tipo', 'equalto', 'Despesa')|first) %}
+            {% set entrada = (transferencia.lancamentos|selectattr('tipo', 'equalto', 'Receita')|first) %}
+            {% if saida and entrada %}
+            <tr>
+                <td>{{ transferencia.data_criacao.strftime('%d/%m/%Y') }}</td>
+                <td><i class="bi bi-arrow-left-right" style="color: #6f42c1;"></i> {{ saida.descricao.split(':')[1] }}</td>
+                <td>Transferência</td>
+                <td>
+                    <span class="badge text-bg-danger">{{ saida.conta.nome }}</span>
+                    <i class="bi bi-arrow-right"></i>
+                    <span class="badge text-bg-success">{{ entrada.conta.nome }}</span>
+                </td>
+                <td>{{ saida.valor | currency }}</td>
+                <td><span class="badge text-bg-secondary">Único</span></td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-primary me-1" disabled><i class="bi bi-pencil"></i></button>
+                    <button class="btn btn-sm btn-outline-danger" disabled><i class="bi bi-trash"></i></button>
+                </td>
+            </tr>
+            {% endif %}
+        {% endfor %}
+
         {% for recorrencia in recorrencias %}
         {% set primeiro_lancamento = recorrencia.lancamentos|sort(attribute='data_vencimento')|first %}
         {% if primeiro_lancamento %}
@@ -79,22 +95,15 @@
             <td>{{ recorrencia.data_criacao.strftime('%d/%m/%Y') if recorrencia.data_criacao }}</td>
             <td><i class="{{ primeiro_lancamento.subcategoria.categoria.icone }}" style="color: {{ primeiro_lancamento.subcategoria.categoria.cor }};"></i> {{ recorrencia.descricao_base }}</td>
             <td>{{ primeiro_lancamento.subcategoria.categoria.nome }} / {{ primeiro_lancamento.subcategoria.nome }}</td>
-            <td>
-                {% if primeiro_lancamento.conta.logo_imagem %}
-                    <img src="{{ url_for('static', filename='uploads/' + primeiro_lancamento.conta.logo_imagem) }}" alt="Logo" style="width: 20px; height: auto; margin-right: 5px; border-radius: 3px;">
-                {% endif %}
-                {{ primeiro_lancamento.conta.nome }}
-            </td>
-            <td class="{% if primeiro_lancamento.tipo == 'Despesa' %}text-danger{% else %}text-success{% endif %}">
-                {{ (recorrencia.lancamentos|sum(attribute='valor')) | currency }}
-            </td>
+            <td>{% if primeiro_lancamento.conta.logo_imagem %}<img src="{{ url_for('static', filename='uploads/' + primeiro_lancamento.conta.logo_imagem) }}" alt="Logo" style="width: 20px; height: auto; margin-right: 5px; border-radius: 3px;">{% endif %}{{ primeiro_lancamento.conta.nome }}</td>
+            <td class="{% if primeiro_lancamento.tipo == 'Despesa' %}text-danger{% else %}text-success{% endif %}">{{ (recorrencia.lancamentos|sum(attribute='valor')) | currency }}</td>
             <td>
                 {% if recorrencia.tipo == 'Fixa' %}<span class="badge text-bg-primary">{{ recorrencia.tipo }}</span>
                 {% elif recorrencia.tipo == 'Parcelada' %}<span class="badge text-bg-warning">{{ recorrencia.tipo }} (em {{ recorrencia.total_parcelas }}x)</span>
                 {% else %}<span class="badge text-bg-info">{{ recorrencia.tipo }}</span>{% endif %}
             </td>
             <td class="text-center">
-                <button class="btn btn-sm btn-outline-primary me-1" disabled title="Editar Lançamento"><i class="bi bi-pencil"></i></button>
+                <a href="{{ url_for('lancamentos_bp.editar_recorrencia', id=recorrencia.id) }}" class="btn btn-sm btn-outline-primary me-1" title="Editar Recorrência"><i class="bi bi-pencil"></i></a>
                 <button type="button" class="btn btn-sm btn-outline-danger btn-deletar" data-bs-toggle="modal" data-bs-target="#modalExcluir" data-tipo-item="recorrencia" data-recorrencia-id="{{ recorrencia.id }}" data-lancamento-id="{{ primeiro_lancamento.id }}" data-descricao="{{ recorrencia.descricao_base }}" data-vencimento="{{ primeiro_lancamento.data_vencimento.strftime('%d/%m/%Y') }}" title="Excluir Recorrência"><i class="bi bi-trash"></i></button>
             </td>
         </tr>
@@ -106,22 +115,17 @@
             <td>{{ lancamento.data_criacao.strftime('%d/%m/%Y') if lancamento.data_criacao }}</td>
             <td><i class="{{ lancamento.subcategoria.categoria.icone }}" style="color: {{ lancamento.subcategoria.categoria.cor }};"></i> {{ lancamento.descricao }}</td>
             <td>{{ lancamento.subcategoria.categoria.nome }} / {{ lancamento.subcategoria.nome }}</td>
-            <td>
-                {% if lancamento.conta.logo_imagem %}
-                    <img src="{{ url_for('static', filename='uploads/' + lancamento.conta.logo_imagem) }}" alt="Logo" style="width: 20px; height: auto; margin-right: 5px; border-radius: 3px;">
-                {% endif %}
-                {{ lancamento.conta.nome }}
-            </td>
+            <td>{% if lancamento.conta.logo_imagem %}<img src="{{ url_for('static', filename='uploads/' + lancamento.conta.logo_imagem) }}" alt="Logo" style="width: 20px; height: auto; margin-right: 5px; border-radius: 3px;">{% endif %}{{ lancamento.conta.nome }}</td>
             <td class="{% if lancamento.tipo == 'Despesa' %}text-danger{% else %}text-success{% endif %}">{{ lancamento.valor | currency }}</td>
             <td><span class="badge text-bg-secondary">Único</span></td>
             <td class="text-center">
-                <button class="btn btn-sm btn-outline-primary me-1" disabled title="Editar Lançamento"><i class="bi bi-pencil"></i></button>
+                <a href="{{ url_for('lancamentos_bp.editar_lancamento_unico', id=lancamento.id) }}" class="btn btn-sm btn-outline-primary me-1" title="Editar Lançamento"><i class="bi bi-pencil"></i></a>
                 <button type="button" class="btn btn-sm btn-outline-danger btn-deletar" data-bs-toggle="modal" data-bs-target="#modalExcluir" data-tipo-item="unico" data-lancamento-id="{{ lancamento.id }}" data-descricao="{{ lancamento.descricao }}" title="Excluir Lançamento"><i class="bi bi-trash"></i></button>
             </td>
         </tr>
         {% endfor %}
 
-        {% if not lancamentos_unicos and not recorrencias %}
+        {% if not lancamentos_unicos and not recorrencias and not transferencias %}
         <tr><td colspan="7" class="text-center">Nenhum lançamento encontrado.</td></tr>
         {% endif %}
     </tbody>
@@ -144,12 +148,58 @@
 </div>
 
 <script>
+    function toggleLancamentoFields() {
+        const tipo = document.querySelector('input[name="tipo_lancamento"]:checked').value;
+        const camposRD = document.getElementById('campos_receita_despesa');
+        const camposTransf = document.getElementById('campos_transferencia');
+        
+        const categoria = document.getElementById('categoria');
+        const subcategoria = document.getElementById('subcategoria');
+        const contaRD = document.getElementById('conta_id_rd');
+        const recorrenciaRadios = document.querySelectorAll('input[name="recorrencia_tipo"]');
+
+        const contaOrigem = document.getElementById('conta_origem_id');
+        const contaDestino = document.getElementById('conta_destino_id');
+
+        if (tipo === 'Transferencia') {
+            camposRD.style.display = 'none';
+            camposTransf.style.display = 'block';
+            
+            categoria.required = false;
+            subcategoria.required = false;
+            contaRD.required = false;
+            
+            contaOrigem.required = true;
+            contaOrigem.disabled = false;
+            contaDestino.required = true;
+            contaDestino.disabled = false;
+        } else {
+            camposRD.style.display = 'block';
+            camposTransf.style.display = 'none';
+            
+            categoria.required = true;
+            subcategoria.required = true;
+            contaRD.required = true;
+            
+            contaOrigem.required = false;
+            contaOrigem.disabled = true;
+            contaDestino.required = false;
+            contaDestino.disabled = true;
+        }
+    }
+
+    document.querySelectorAll('input[name="tipo_lancamento"]').forEach(elem => {
+        elem.addEventListener('change', toggleLancamentoFields);
+    });
+    document.addEventListener('DOMContentLoaded', toggleLancamentoFields);
+
     document.querySelectorAll('input[name="recorrencia_tipo"]').forEach(elem => {
         elem.addEventListener("change", function(event) {
             var display = event.target.value === 'parcelada' ? 'flex' : 'none';
             document.getElementById('campos_parcelamento').style.display = display;
         });
     });
+
     document.getElementById('categoria').addEventListener('change', function() {
         var categoriaId = this.value;
         var subcategoriaSelect = document.getElementById('subcategoria');
@@ -172,6 +222,7 @@
             subcategoriaSelect.innerHTML = '<option value="">Selecione uma categoria primeiro</option>';
         }
     });
+
     const modalExcluir = document.getElementById('modalExcluir');
     if (modalExcluir) {
         modalExcluir.addEventListener('show.bs.modal', event => {

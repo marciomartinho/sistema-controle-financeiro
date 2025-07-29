@@ -10,15 +10,21 @@
   <body>
     <nav class="navbar navbar-expand-lg bg-body-tertiary mb-4" data-bs-theme="dark">
         <div class="container">
-          <a class="navbar-brand" href="{{ url_for('index') }}">Meu Financeiro</a>
+          <a class="navbar-brand" href="{{ url_for('dashboard_bp.dashboard') }}">Meu Financeiro</a>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
           </button>
           <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('contas_bp.gerenciar_contas') }}">Contas</a></li>
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('categorias_bp.gerenciar_categorias') }}">Categorias</a></li>
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('lancamentos_bp.gerenciar_lancamentos') }}">Lançamentos</a></li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('contas_bp.gerenciar_contas') }}">Contas</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('categorias_bp.gerenciar_categorias') }}">Categorias</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('lancamentos_bp.gerenciar_lancamentos') }}">Lançamentos</a>
+              </li>
             </ul>
           </div>
         </div>
@@ -35,8 +41,10 @@
             {% endfor %}
           {% endif %}
         {% endwith %}
+
         {% block content %}{% endblock %}
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>
