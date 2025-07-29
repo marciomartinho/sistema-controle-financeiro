@@ -236,3 +236,38 @@ def editar_recorrencia(id):
     categorias = Categoria.query.order_by(Categoria.nome).all()
     contas = Conta.query.order_by(Conta.nome).all()
     return render_template('editar_recorrencia.html', recorrencia=recorrencia, primeiro_lancamento=primeiro_lancamento, categorias=categorias, contas=contas)
+
+@lancamentos_bp.route('/lancamentos/deletar_transferencia/<int:id>', methods=['POST'])
+def deletar_transferencia(id):
+    transferencia_grupo = TransferenciaGrupo.query.get_or_404(id)
+    
+    # Busca os lançamentos da transferência (saída e entrada)
+    lancamentos_transferencia = Lancamento.query.filter_by(transferencia_grupo_id=id).all()
+    
+    if len(lancamentos_transferencia) != 2:
+        flash('Erro: Transferência com dados inconsistentes.', 'danger')
+        return redirect(url_for('lancamentos_bp.gerenciar_lancamentos'))
+    
+    # Identifica qual é a saída e qual é a entrada
+    saida = next((l for l in lancamentos_transferencia if l.tipo == 'Despesa'), None)
+    entrada = next((l for l in lancamentos_transferencia if l.tipo == 'Receita'), None)
+    
+    if not saida or not entrada:
+        flash('Erro: Transferência com dados inconsistentes.', 'danger')
+        return redirect(url_for('lancamentos_bp.gerenciar_lancamentos'))
+    
+    # CAPTURA OS NOMES DAS CONTAS ANTES DE DELETAR
+    nome_conta_origem = saida.conta.nome
+    nome_conta_destino = entrada.conta.nome
+    
+    # Deleta os lançamentos (automaticamente reverte o impacto no saldo)
+    for lancamento in lancamentos_transferencia:
+        db.session.delete(lancamento)
+    
+    # Deleta o grupo da transferência
+    db.session.delete(transferencia_grupo)
+    
+    db.session.commit()
+    
+    flash(f'Transferência de {nome_conta_origem} para {nome_conta_destino} foi excluída com sucesso.', 'info')
+    return redirect(url_for('lancamentos_bp.gerenciar_lancamentos'))
