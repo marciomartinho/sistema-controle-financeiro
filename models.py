@@ -1,7 +1,7 @@
 # models.py
 
 from app import db
-from datetime import date
+from datetime import datetime
 from sqlalchemy.sql import func
 
 class Categoria(db.Model):
@@ -56,16 +56,15 @@ class CartaoCredito(db.Model):
     __tablename__ = 'cartoes_credito'
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(50), unique=True, nullable=False)
-    dia_vencimento = db.Column(db.Integer, nullable=False)  # Dia do mês (1-31)
-    conta_pagamento_id = db.Column(db.Integer, db.ForeignKey('contas.id'), nullable=True)  # Conta para debitar o pagamento
+    dia_vencimento = db.Column(db.Integer, nullable=False)
+    conta_pagamento_id = db.Column(db.Integer, db.ForeignKey('contas.id'), nullable=True)
     logo_imagem = db.Column(db.String(100), nullable=True)
     ativo = db.Column(db.Boolean, nullable=False, default=True)
-    data_criacao = db.Column(db.Date, nullable=False, default=date.today)
+    data_criacao = db.Column(db.DateTime(timezone=True), nullable=False, server_default=func.now())
     
     conta_pagamento = db.relationship('Conta', backref=db.backref('cartoes_credito', lazy=True))
 
     def total_gastos_mes(self, ano, mes):
-        """Calcula o total de gastos do cartão em um mês específico"""
         total = db.session.query(func.sum(Lancamento.valor)).filter(
             Lancamento.cartao_credito_id == self.id,
             Lancamento.tipo == 'Despesa',
@@ -75,7 +74,6 @@ class CartaoCredito(db.Model):
         return total
 
     def fatura_paga_mes(self, ano, mes):
-        """Verifica se a fatura do mês está marcada como paga"""
         fatura = db.session.query(FaturaCartao).filter(
             FaturaCartao.cartao_id == self.id,
             FaturaCartao.ano == ano,
@@ -84,7 +82,6 @@ class CartaoCredito(db.Model):
         return fatura.paga if fatura else False
 
     def marcar_fatura_mes(self, ano, mes, paga=True):
-        """Marca/desmarca a fatura de um mês como paga"""
         fatura = db.session.query(FaturaCartao).filter(
             FaturaCartao.cartao_id == self.id,
             FaturaCartao.ano == ano,
@@ -94,12 +91,7 @@ class CartaoCredito(db.Model):
         if fatura:
             fatura.paga = paga
         else:
-            fatura = FaturaCartao(
-                cartao_id=self.id,
-                ano=ano,
-                mes=mes,
-                paga=paga
-            )
+            fatura = FaturaCartao(cartao_id=self.id, ano=ano, mes=mes, paga=paga)
             db.session.add(fatura)
         
         return fatura
@@ -114,13 +106,13 @@ class Recorrencia(db.Model):
     tipo = db.Column(db.String(20), nullable=False) 
     total_parcelas = db.Column(db.Integer, nullable=True)
     frequencia = db.Column(db.String(20), nullable=False, default='Mensal')
-    data_criacao = db.Column(db.Date, nullable=False, default=date.today)
+    data_criacao = db.Column(db.DateTime(timezone=True), nullable=False, server_default=func.now())
     lancamentos = db.relationship('Lancamento', backref='recorrencia', lazy=True, cascade="all, delete-orphan")
 
 class TransferenciaGrupo(db.Model):
     __tablename__ = 'transferencia_grupos'
     id = db.Column(db.Integer, primary_key=True)
-    data_criacao = db.Column(db.Date, nullable=False, default=date.today)
+    data_criacao = db.Column(db.DateTime(timezone=True), nullable=False, server_default=func.now())
 
 class FaturaCartao(db.Model):
     __tablename__ = 'faturas_cartao'
@@ -130,7 +122,7 @@ class FaturaCartao(db.Model):
     mes = db.Column(db.Integer, nullable=False)
     paga = db.Column(db.Boolean, nullable=False, default=False)
     data_pagamento = db.Column(db.Date, nullable=True)
-    data_criacao = db.Column(db.Date, nullable=False, default=date.today)
+    data_criacao = db.Column(db.DateTime(timezone=True), nullable=False, server_default=func.now())
     
     cartao = db.relationship('CartaoCredito', backref=db.backref('faturas', lazy=True))
     
@@ -145,10 +137,10 @@ class Lancamento(db.Model):
     data_vencimento = db.Column(db.Date, nullable=False)
     data_pagamento = db.Column(db.Date, nullable=True)
     status = db.Column(db.String(10), nullable=False, default='Pendente')
-    data_criacao = db.Column(db.Date, nullable=False, server_default=func.now())
+    data_criacao = db.Column(db.DateTime(timezone=True), nullable=False, server_default=func.now())
     
     recorrencia_id = db.Column(db.Integer, db.ForeignKey('recorrencias.id'), nullable=True)
-    conta_id = db.Column(db.Integer, db.ForeignKey('contas.id'), nullable=True)  # MUDANÇA: agora pode ser NULL
+    conta_id = db.Column(db.Integer, db.ForeignKey('contas.id'), nullable=True)
     subcategoria_id = db.Column(db.Integer, db.ForeignKey('subcategorias.id'), nullable=True) 
     transferencia_grupo_id = db.Column(db.Integer, db.ForeignKey('transferencia_grupos.id'), nullable=True)
     cartao_credito_id = db.Column(db.Integer, db.ForeignKey('cartoes_credito.id'), nullable=True)
@@ -159,26 +151,16 @@ class Lancamento(db.Model):
     cartao_credito = db.relationship('CartaoCredito', backref=db.backref('lancamentos', lazy=True))
 
     def __init__(self, **kwargs):
-        """
-        Validação customizada: lançamento deve ter CONTA_ID OU CARTAO_CREDITO_ID, mas não ambos
-        """
         super().__init__(**kwargs)
-        
-        # Validação: deve ter conta OU cartão, mas não ambos
         if self.conta_id and self.cartao_credito_id:
             raise ValueError("Lançamento não pode ter conta_id e cartao_credito_id ao mesmo tempo")
-        
-        # Para transferências, deve ter conta_id
         if self.transferencia_grupo_id and not self.conta_id:
             raise ValueError("Transferências devem ter conta_id")
-        
-        # Para lançamentos normais (não transferência), deve ter conta_id OU cartao_credito_id
         if not self.transferencia_grupo_id and not self.conta_id and not self.cartao_credito_id:
             raise ValueError("Lançamento deve ter conta_id ou cartao_credito_id")
 
     @property
     def origem_destino(self):
-        """Retorna a origem/destino do lançamento (conta ou cartão)"""
         if self.conta_id:
             return self.conta.nome
         elif self.cartao_credito_id:
