@@ -1,5 +1,10 @@
 /* ===== ESTILOS ESPECÍFICOS PARA LANÇAMENTOS ===== */
 
+/* Header gradiente */
+.bg-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
 /* FIX: Adicionado para garantir o alinhamento da tabela */
 .table-responsive .table {
     table-layout: fixed;

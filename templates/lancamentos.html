@@ -471,7 +471,7 @@
                                 <td class="ps-4">
                                     <div class="d-flex flex-column">
                                         <span class="fw-medium">{{ recorrencia.data_criacao.strftime('%d/%m/%Y') if recorrencia.data_criacao }}</span>
-                                        <small class="text-muted">Criação</small>
+                                        <small class="text-muted">{{ recorrencia.data_criacao.strftime('%H:%M') if recorrencia.data_criacao }}</small>
                                     </div>
                                 </td>
                                 <td>
@@ -513,16 +513,8 @@
                                 <td>
                                     <div class="d-flex align-items-center">
                                         {% if primeiro_lancamento.cartao_credito_id %}
-                                            {% if primeiro_lancamento.cartao_credito.logo_imagem %}
-                                                <img src="{{ url_for('static', filename='uploads/' + primeiro_lancamento.cartao_credito.logo_imagem) }}" 
-                                                     alt="Logo" class="me-2 rounded" style="width: 20px; height: 20px; object-fit: cover;">
-                                            {% endif %}
                                             <span>{{ primeiro_lancamento.cartao_credito.nome }}</span>
                                         {% else %}
-                                            {% if primeiro_lancamento.conta.logo_imagem %}
-                                                <img src="{{ url_for('static', filename='uploads/' + primeiro_lancamento.conta.logo_imagem) }}" 
-                                                     alt="Logo" class="me-2 rounded" style="width: 20px; height: 20px; object-fit: cover;">
-                                            {% endif %}
                                             <span>{{ primeiro_lancamento.conta.nome }}</span>
                                         {% endif %}
                                     </div>
@@ -627,16 +619,8 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     {% if lancamento.cartao_credito_id %}
-                                        {% if lancamento.cartao_credito.logo_imagem %}
-                                            <img src="{{ url_for('static', filename='uploads/' + lancamento.cartao_credito.logo_imagem) }}" 
-                                                 alt="Logo" class="me-2 rounded" style="width: 20px; height: 20px; object-fit: cover;">
-                                        {% endif %}
                                         <span>{{ lancamento.cartao_credito.nome }}</span>
                                     {% else %}
-                                        {% if lancamento.conta.logo_imagem %}
-                                            <img src="{{ url_for('static', filename='uploads/' + lancamento.conta.logo_imagem) }}" 
-                                                 alt="Logo" class="me-2 rounded" style="width: 20px; height: 20px; object-fit: cover;">
-                                        {% endif %}
                                         <span>{{ lancamento.conta.nome }}</span>
                                     {% endif %}
                                 </div>
